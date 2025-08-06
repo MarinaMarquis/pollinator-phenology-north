@@ -51,4 +51,26 @@ cat(bbox_wkt)
 ### Create 5 km grids across the entire clipped geoJSON of eco-region NA24
 
 
+# Reproject to a projected CRS (e.g., North America Albers Equal Area) so that grids are interpreted in km 
+# and not degrees 
+NA_24_proj <- st_transform(NA_24, 5070)
+
+# Create 5 km grid
+cell_5 <- 5000  # 5,000 meters = 5 km
+NA24_grid_5 <- st_make_grid(NA_24_proj, cellsize = c(cell_5, cell_5), what = "polygons")
+NA24_grids_sf <- st_sf(geometry = NA24_grid_5)
+
+# Clip to the ecoregion polygon
+grid_adj_NA24 <- st_intersection(NA24_grids_sf, NA_24_proj) %>%
+  mutate(grid_id = row_number())
+
+# Reproject back to WGS84 (EPSG:4326) only for export because geoJSON requires coordinates in WGS 84
+grid_adj_NA24_wgs <- st_transform(grid_adj_NA24, 4326)
+
+# Take a look at the maps
+plot(st_geometry(grid_adj_NA24))        # Projected view
+plot(st_geometry(grid_adj_NA24_wgs))    # Reprojected WGS84 view
+
+# Export to GeoJSON for use in GBIF or elsewhere
+st_write(grid_adj_NA24_wgs, "Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson", delete_dsn = TRUE)
 
