@@ -38,26 +38,26 @@ pollinators_grids_clean <- pollinators_grids1 %>%
 sum(is.na(pollinators_grids_clean$species))
 
 
-# Filter: only include grids with >= 3 species and at least 10 observations of each species 
+# Filter: only include grids with >= 6 species and at least 10 observations of each species 
 filtered_5 <- pollinators_grids_clean %>%
   group_by(grid_id, species) %>%
   summarize(n = n(), .groups = 'drop') %>%
   filter(n >= 10) %>%
   group_by(grid_id) %>%
-  filter(n_distinct(species) >= 3) %>%
+  filter(n_distinct(species) >= 6) %>%
   ungroup() %>%
   inner_join(pollinators_grids1, by = c("grid_id", "species"))
 
 # Quick fact check 
-#>= 3 species 
+#>= 6 species 
 species_count_check <- filtered_5 %>%
   group_by(grid_id) %>%
   summarize(unique_species_count = n_distinct(species), .groups = 'drop')
 #
-if (all(species_count_check$unique_species_count >= 3)) {
-  cat("All grids have at least 3 species.\n")
+if (all(species_count_check$unique_species_count >= 6)) {
+  cat("All grids have at least 6 species.\n")
 } else {
-  cat("Some grids do not have at least 3 species.\n")
+  cat("Some grids do not have at least 6 species.\n")
 }
 
 #>= 10 observations
@@ -72,7 +72,7 @@ if (all(observation_count_check$observation_count >= 10)) {
 }
 
 
-#All grids have at least 3 species and at least 10 observations. 
+#All grids have at least 6 species and each species has at least 10 observations. 
 
 # Let's also make sure the date column is formatted correctly for analysis 
 filtered_5$Date <- as.Date(filtered_5$eventDate)
@@ -87,7 +87,7 @@ unique(filtered_5$order)
 #Check
 length(unique(five_km_grids$grid_id))  #24128 grids spanning eco-region NA24 (no data attached)
 length(unique(pollinators_grids$grid_id)) #19218 grids that have observations in them before filtering
-length(unique(filtered_5$grid_id)) #464 grids with observations after filtering
+length(unique(filtered_5$grid_id)) #286 grids with observations after filtering
 
 
 # Export the rds file 

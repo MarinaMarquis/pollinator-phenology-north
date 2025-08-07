@@ -16,7 +16,7 @@ NA_24 <- st_read("Data/Spatial Data/ecoregion geojson/NA_24_clipped.geojson") #m
 ########################################################################################################### 
 
 
-# How many species? 1248
+# How many species? 1231
 length(unique(filtered_5$species))
 
 # How many species per grid cell?
@@ -25,7 +25,7 @@ species_num <- filtered_5 %>%
   summarise(species_n = n_distinct(species))
 species_num
 
-# Average species per grid cell: 19.3319
+# Average species per grid cell: 28.95105
 mean(species_num$species_n)
 
 
@@ -33,7 +33,7 @@ mean(species_num$species_n)
 max(species_num$species_n) #367
 min(species_num$species_n) #3
 
-# Number of grids: 464
+# Number of grids: 286
 length(unique(species_num$grid_id))
 
 # Histogram of number of species per grid cell 
@@ -70,8 +70,8 @@ df <- data.frame(
   Species_Found_In_Most_Cells=character()) 
 
 # Row 
-row <- data.frame(Average_Species_Per_Grid_Cell = 19.3319,  
-                  Most_Species_In_One_Cell = 367, Species_Found_In_Most_Cells="Papilio glaucus")
+row <- data.frame(Average_Species_Per_Grid_Cell = 28.95105,  
+                  Most_Species_In_One_Cell = 367, Species_Found_In_Most_Cells="Bombus impatiens")
 
 # Combine them
 df <- rbind(df, row)
