@@ -14,7 +14,7 @@ library(diptest)
 
 
 # Read in data  
-filtered_5 <- readRDS("Data/filtered_5.rds") #observation used to make phenology estimates 
+filtered_5 <- readRDS("Data/filtered_5.rds") #observations used to make phenology estimates 
 filtered_5_with_landsat <- read.csv("Data/filtered_5_with_GHMI.csv") # mean GHMI for each grid 
 phenology_estimates_all_species_each_grid <- readRDS('Data/phenology_estimates_by_grid_by_species.RDS') #Phenology 
 #estimates for each species in each grid 
@@ -74,7 +74,13 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
          species != "Delphinia picta",
          species != "Harmonia axyridis",
          species != "Polygonia interrogationis",
-         species != "Solenopsis invicta"
+         species != "Solenopsis invicta", 
+         species != "Asterocampa celtis", 
+         species != "Cotinis nitida", 
+         species != "Acrolophus popeanella", 
+         species != "Apatelodes torrefacta", 
+         species != "Dyspteris abortivaria", 
+         species != "Eubaphe mendica"
   )
 unique(phenology_estimates_all_species_each_grid_with_GHMI$species) #double check new species list
 
@@ -114,6 +120,25 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
     TRUE ~ "Unknown"
   ))
 
+
+
+# When checking species functional groups, I found a mistake in one of the species. The species Urola nivalis
+# mistakenly has Argyria listed under the genus column and Argyria nivalis under the species name. Argyria nivalis
+# is not a real species, but Urola nivalis is. This correct species name is written under the 
+# verbatimScientificName column. I'm not sure how that got messed up. However, I will change all of these
+# instances so that they show the correct genus and species. 
+
+phenology_estimates_all_species_each_grid_with_GHMI <- 
+  phenology_estimates_all_species_each_grid_with_GHMI %>%
+  mutate(
+    change_condition = species == "Argyria nivalis" & genus == "Argyria",
+    species = ifelse(change_condition, "Urola nivalis", species),
+    genus   = ifelse(change_condition, "Urola", genus)
+  ) %>%
+  select(-change_condition)
+
+
+# Look at the data 
 length(na.omit(unique(phenology_estimates_all_species_each_grid_with_GHMI$grid)))
 #look at how many grids we're left with: 285
 length(na.omit(unique(phenology_estimates_all_species_each_grid_with_GHMI$family))) #number of families: 49
