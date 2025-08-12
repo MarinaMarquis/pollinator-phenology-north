@@ -13,10 +13,10 @@ library(tidyverse)
 
 # Read in data 
 
-# read in geoJSON of eco-region NA24
+# Read in geoJSON of eco-region NA24
 five_km_grids <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson")
 
-# read in iNat data
+# Read in iNat data
 inat_pollinators <- readRDS("Data/iNaturalist_pollinator_observations.rds")
 
 
