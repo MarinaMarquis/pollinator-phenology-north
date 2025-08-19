@@ -15,6 +15,7 @@ library(tidyverse)
 # Read in data 
 ecoregions <- st_read("Data/Spatial Data/ecoregion geojson/one_earth-bioregions-2023.geojson") # ecoregion geoJSON
 
+
 ###############################################################################################################
 
 
@@ -46,9 +47,13 @@ bbox_wkt <- sprintf(
 
 cat(bbox_wkt)
 
+
+
 ###############################################################################################################
 
-### Create 5 km grids across the entire clipped geoJSON of eco-region NA24
+
+### Create 5 x 5 km grids across the entire clipped geoJSON of eco-region NA24
+
 
 # Reproject to a projected CRS (e.g., North America Albers Equal Area) so that grids are interpreted in km 
 # and not degrees 
@@ -72,3 +77,4 @@ plot(st_geometry(grid_adj_NA24_wgs))    # Reprojected WGS84 view
 
 # Export to GeoJSON for use in GBIF or elsewhere
 st_write(grid_adj_NA24_wgs, "Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson", delete_dsn = TRUE)
+
