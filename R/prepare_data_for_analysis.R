@@ -63,7 +63,7 @@ print(check, n = Inf)
 unique(phenology_estimates_all_species_each_grid_with_GHMI$species) #get list of species 
 phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_species_each_grid_with_GHMI %>%
   filter(species != "Actias luna",
-         species !=  "Eacles imperialis",
+         species != "Eacles imperialis",
          species != "Hyphantria cunea", 
          species != "Hypercompe scribonia",
          species != "Malacosoma americana",
@@ -80,7 +80,15 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
          species != "Acrolophus popeanella", 
          species != "Apatelodes torrefacta", 
          species != "Dyspteris abortivaria", 
-         species != "Eubaphe mendica"
+         species != "Eubaphe mendica", 
+         species != "Eudryas grata", 
+         species != "Antheraea polyphemus", 
+         species != "Pelidnota punctata", 
+         species != "Peridea angulosa", 
+         species != "Callosamia angulifera", 
+         species != "Paonias myops", 
+         species != "Paraeschra georgica", 
+         species != "Pachycondyla chinensis"
   )
 unique(phenology_estimates_all_species_each_grid_with_GHMI$species) #double check new species list
 
