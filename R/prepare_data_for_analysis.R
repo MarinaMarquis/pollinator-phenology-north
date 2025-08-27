@@ -57,10 +57,11 @@ print(check, n = Inf)
 #############################################################################################################
 
 
-#Label the functional groups of all of the species in the study, take out species that are not pollinators
-#e.g., moths that don't have mouth parts or simply don't eat as adults)
-
-unique(phenology_estimates_all_species_each_grid_with_GHMI$species) #get list of species 
+#Label the functional groups of all of the species in the study. I've put this chunk of code in the Filterin Data
+#for Phenological Estimates script so that when the phenology estimates are ran in the Phenological_Estimates_by_grid_by_species.R
+#script, these species will have already been filtered out. I'm leaving it here because I can't 
+#stomach the thought of running that phenology code again. However, I'll take it out before publication so 
+#that I can keep using this df with the proper species list.Just being lazy for the moment. 
 phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_species_each_grid_with_GHMI %>%
   filter(species != "Actias luna",
          species != "Eacles imperialis",
