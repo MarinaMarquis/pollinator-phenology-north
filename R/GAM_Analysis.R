@@ -10,13 +10,15 @@ library(tidyverse)
 library(mgcv)
 library(sf)
 library(MuMIn)
+library(patchwork)
+library(gratia)
 set.seed(120)
 
 # Read in data 
 fp_data <- readRDS("Data/phenology_estimates_data_for_analysis.rds") #phenology estimate data
 five_km_grids <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #geoJSON of 
                                                                                                   #eco-region
-                                                                                                  #NA24
+                                                                                             #NA24
 
 ########################################################################################################### 
 
@@ -121,16 +123,16 @@ gam_1 <- gam(duration ~ mean_GHMI +
              family = gaussian(),
              method = "REML",
              data=fp_data)
-summary(gam_1) #GHMI is a sig. predictor of duration (p=0.00876)
+summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0312), as is species (<2e-16) and lat/long(<2e-16)
 gam.check(gam_1)
 gam.check(gam_1)$k.check
 #The mean GHMI seems to explain very little deviance in the model, species and lat/long explain much 
-#more variation
+#more variation. Model fit not much higher than null model. 
 
 # Now let's see how they rank
 AIC(gam_null)
 AIC(gam_1)
-# So in this case the null model performed better, so GHMI does not help explain duration
+# So in this case the null model performed worse but not by much, so adding GHMI does not help explain duration
 
 # Let's repeat for an individual species
 gam_null_bi <- gam(duration ~ 1 + s(lat, lon, k = 10, bs="tp"), 
@@ -304,8 +306,8 @@ gam_1_off <- gam(offset ~ mean_GHMI +
                  family = gaussian(),
                  method = "REML",
                  data=fp_data)
-summary(gam_1_off) #GHMI is a sig. predictor of offset
-gam.check(gam_1_off)
+summary(gam_1_off) #GHMI is a sig. predictor of offset (p=1.42e-08)
+gam.check(gam_1_off) #not much difference in deviance explained between this model and the null 
 
 # Now let's see how they rank
 AIC(gam_null_off)
@@ -327,8 +329,8 @@ gam_1_bi_off <- gam(offset ~ mean_GHMI +
                     family = gaussian(),
                     method = "REML",
                     data=Bombus_impatiens)
-summary(gam_1_bi_off) #GHMI is a sig. predictor of onset 
-gam.check(gam_1_bi_off)
+summary(gam_1_bi_off) #GHMI is a sig. predictor of onset (p=0.000159)
+gam.check(gam_1_bi_off) #adding GHMI increases deviance explained 
 
 # Now let's see how they rank
 AICc(gam_null_bi_off)
@@ -528,10 +530,10 @@ species_gam_significant <- species_gam %>%
   filter(GHMI_pval < 0.05,
          model_weight_comp_null > 0.75,
          adj_r2 > 0)
-unique(species_gam_significant$species) #44 species sig. 
-unique(species_gam_significant$species[species_gam_significant$model=="onset"]) #19 sig. for onset 
-unique(species_gam_significant$species[species_gam_significant$model=="offset"]) #23 sig. for offset
-unique(species_gam_significant$species[species_gam_significant$model=="duration"]) #10 sig. for duration 
+unique(species_gam_significant$species) #24 species sig. 
+unique(species_gam_significant$species[species_gam_significant$model=="onset"]) #9 sig. for onset 
+unique(species_gam_significant$species[species_gam_significant$model=="offset"]) #13 sig. for offset
+unique(species_gam_significant$species[species_gam_significant$model=="duration"]) #7 sig. for duration 
 
 
 # =  species only onset 
@@ -565,12 +567,10 @@ species_no_spatial_effect <- spatial_summary %>%
 
 print(species_no_spatial_effect)
 
-#For the following 18 species, spatial location is not influencing phenology beyond what GHMI explains:
-# "Acronicta americana", "Argyrotaenia velutinana", "Bombus impatiens", "Ceratomia catalpae",    
-#"Eacles imperialis", "Epargyreus clarus", "Eremnophila aureonotata", "Eubaphe mendica",        
-#"Helicoverpa zea", "Hyphantria cunea", "Hypsoropha hormos", "Macaria pustularia",     
-#"Orgyia leucostigma", "Palthis angulalis", "Papilio troilus", "Phyciodes tharos",       
-#"Protoboarmia porcelaria", "Pyrrharctia isabella"
+#For the following 9 species, spatial location is not influencing phenology beyond what GHMI explains:
+#"Argyrotaenia velutinana", "Bombus impatiens", "Epargyreus clarus", "Eremnophila aureonotata",
+#"Helicoverpa zea", "Hypsoropha hormos", "Papilio troilus", "Phyciodes tharos",       
+#and "Pyrrharctia isabella"
 
 #Species where lat/long is sig.
 species_with_spatial_effect <- spatial_summary %>%
@@ -578,14 +578,11 @@ species_with_spatial_effect <- spatial_summary %>%
   pull(species)
 print(species_with_spatial_effect)
 
-# For the following 26 species, at lat/long is sig. influencing at least one phenology variables 
-# beyond what GHMI explains: "Clogmia albipunctatus", "Malacosoma americana", "Xylocopa virginica", 
-#"Actias luna", "Antheraea polyphemus", "Apis mellifera", "Asterocampa celtis", "Battus philenor",         
-#"Camponotus chromaiodes", "Danaus plexippus", "Eristalis tenax", "Euclea delphinii",        
-#"Eudryas grata", "Hylephila phyleus", "Hypoprepia fucosa", "Limenitis arthemis",      
-#"Limenitis astyanax",  "Malacosoma disstria" , "Noctua pronuba", "Papilio glaucus",          
-#"Phigalia strigataria", "Popillia japonica" , "Spodoptera ornithogalli", "Tetanolita mynesalis",     
-#"Tetraopes tetrophthalmus", "Vespula squamosa"  
+# For the following 15 species, at lat/long is sig. influencing at least one phenology variables 
+# beyond what GHMI explains: "Clogmia albipunctatus"    "Xylocopa virginica"       "Apis mellifera"           "Battus philenor"         
+# "Danaus plexippus"         "Eristalis tenax"          "Euclea delphinii"         "Hylephila phyleus"       
+# "Hypoprepia fucosa"        "Limenitis arthemis"       "Noctua pronuba"           "Papilio glaucus"         
+# "Spodoptera ornithogalli"  "Tetraopes tetrophthalmus" "Vespula squamosa" 
 
 
 # Looking at which models have spatial significance for each species: 
@@ -600,16 +597,15 @@ sig_spatial_summary <- sig_spatial_models %>%
 
 print(sig_spatial_summary, n=26)
 
-# For the following  13 species, at lat/long is sig. influencing offset beyond what GHMI explains: Antheraea polyphemus, 
-# Asterocampa celtis, Battus philenor, Danaus plexippus, Euclea delphinii, Hylephila phyleus, Limenitis arthemis, 
-# Malacosoma americana, Noctua pronuba, Papilio glaucus, Phigalia strigataria , Spodoptera ornithogalli, 
-# Tetraopes tetrophthalmus
+# For the following  9 species, at lat/long is sig. influencing offset beyond what GHMI explains: Battus philenor,
+# Danaus plexippus, Euclea delphinii, Hylephila phyleus, Limenitis arthemis, Noctua pronuba, Papilio glaucus,          offset            
+# Spodoptera ornithogalli, Tetraopes tetrophthalmus
 
-# For the following species, at lat/long is sig. influencing onset beyond what GHMI explains: Camponotus chromaiodes, 
-#Clogmia albipunctatus, Eristalis tenax, Eudryas grata, Malacosoma americana, Malacosoma disstria , 
-#Popillia japonica, Tetanolita mynesalis, Vespula squamosa, Xylocopa virginica
+# For the following 4 species, at lat/long is sig. influencing onset beyond what GHMI explains: Clogmia albipunctatus, 
+# Eristalis tenax, Vespula squamosa, Xylocopa virginica
 
-# For the following species, at lat/long is sig. influencing duration beyond what GHMI explains:  
+# For the following 4 species, at lat/long is sig. influencing duration beyond what GHMI explains: Apis mellifera, 
+# Clogmia albipunctatus, Hypoprepia fucosa, Xylocopa virginica
 
 
 
@@ -622,8 +618,8 @@ effects <- species_gam_significant %>%
   select(species, model, GHMI_estimate)
 print(effects)
 
-# Example: Danaus plexippus, offset decreases by ~86 days for every 1-unit increase in GHMI. This means 
-#that offset occurs ~86 days earlier in fully anthropogenized areas compared to natural areas 
+# Example: Bombus impatiens, offset increases by ~28 days for every 1-unit increase in GHMI. This means 
+#that offset occurs ~28 days later in fully anthropogenized areas compared to natural areas. 
 
 #Look at GHMI effect for onset, offset, and duration
 effects_onset <- effects %>%
@@ -713,7 +709,7 @@ species_gam_significant %>%
     mean_dev = mean(dev_exp, na.rm = TRUE)
   )
 
-#Offset models, on average, have slightly better R² and deviance explained than onset or duration.
+#Onset models, on average, have slightly better R² and deviance explained than onset or duration.
 #However, these models still have a large range of deviance explained (lots of variation). 
 
 
@@ -722,13 +718,13 @@ species_gam_significant %>%
   group_by(model) %>%
   arrange(model, desc(dev_exp)) %>%
   select(model, species, dev_exp, adj_r2)%>%
-  print(n=21)
+  print(n=29)
 
 # Now compare this list of models with the models that have sig. of the spatial smooth (lat/long): 
 print(sig_spatial_summary)
-#It looks like the onset models that do show spatial significance (Polites otho, Eurema daira, Phoebis sennae)
-#are also the strongest fitting models based on deviance explained and adjusted R² 
-#(all >0.45 deviance and adj R²)
+#It looks like the onset models that do show spatial significance (Clogmia albipunctatus, Eristalis tenax, 
+#Vespula squamosa) are also the strongest fitting models based on deviance explained and adjusted R² 
+#(all >0.45 deviance and adj R²), with the exception of Xylocopa virginica 
 
 
 
@@ -739,15 +735,18 @@ print(sig_spatial_summary)
 
 
 # Separate species into what phenology variable GHMI sig. predicts, based on GAM models: 
-onset_species <- c("Erynnis horatius", "Hylephila phyleus", "Phoebis sennae",
-                   "Eurema daira", "Bombus pensylvanicus", "Polites otho")
+onset_species <- c("Xylocopa virginica", "Papilio troilus", "Argyrotaenia velutinana", 
+                   "Eremnophila aureonotata", "Eristalis tenax", "Vespula squamosa", "Clogmia albipunctatus",
+                   "Hypsoropha hormos","Helicoverpa zea")
 
-offset_species <- c("Danaus plexippus", "Heliconius charithonia", "Eumaeus atala",
-                    "Phyciodes tharos", "Syngamia florella", "Calpodes ethlius")
+offset_species <- c("Bombus impatiens", "Papilio glaucus", "Danaus plexippus", "Epargyreus clarus",       
+                    "Phyciodes tharos", "Hylephila phyleus", "Pyrrharctia isabella", "Battus philenor",         
+                    "Spodoptera ornithogalli", "Tetraopes tetrophthalmus", "Noctua pronuba", 
+                    "Euclea delphinii", "Limenitis arthemis")
 
-duration_species <- c("Heliconius charithonia", "Eumaeus atala", "Phoebis sennae",
-                      "Polites vibex", "Papilio glaucus", "Polites otho",
-                      "Phyciodes tharos", "Euglossa dilemma", "Trigonopeltastes delta")
+duration_species <- c("Xylocopa virginica", "Apis mellifera", "Pyrrharctia isabella", "Papilio troilus",      
+                      "Hypoprepia fucosa", "Noctua pronuba")
+
 
 
 
