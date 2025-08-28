@@ -801,6 +801,24 @@ plot_model_group(onset_species, "onset")
 plot_model_group(offset_species, "offset")
 plot_model_group(duration_species, "duration")
 
+### Relationships summary: In more urban areas, 
+
+#1   Earlier onset, longer duration: Xylocopa virginica
+#2   Later onset, shorter duration: Papilio troilus
+#3   Later offset, longer duration: Pyrrharctia isabella, Noctua pronuba
+
+#4   Later onset: Argyrotaenia velutinana, Eristalis tenax, Hypsoropha hormos, Helicoverpa zea
+#5   Earlier onset: Eremnophila aureonotata, Vespula squamosa, Clogmia albipunctatus
+#6   Later offset: Bombus impatiens, Papilio glaucus, Danaus plexippus, Epargyreus clarus, Phycoides tharos,
+#7                 Battus philenor, Limenitis arthemis 
+#8   Earlier offset: Hylephila phyleus, Spodoptera ornithogalli, Tetraopes tetrophthalmus, Euclea delphinii
+#9   Longer duration: Apis mellifera, Hyproprepia fucosa
+
+# 1-3 make sense, 4-9 make less sense. For example, if onset starts later in the year for more urban areas, why aren't we 
+# seeing total duration being decreased in these urban areas as well? If the species starts its season later (and doesn't 
+# end later), that would mean less days of activity. But we're not seeing that, so what gives? 
+
+ 
 
 # Save the plots 
 ggsave("Figures/GAM_onset_species.png", plot_model_group(onset_species, "onset"), 
