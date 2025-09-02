@@ -135,7 +135,11 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
          species != "Halysidota tessellaris", 
          species != "Hypagyrtis unipunctata",
          species != "Allotria elonympha",
-         species != "Phigalia strigataria", #all of the species up until this point were not pollinators, 
+         species != "Phigalia strigataria", 
+         species != "Idia americalis", 
+         species != "Phosphila miselioides", 
+         species != "Polygrammate hebraeicum", 
+         species != "Spodoptera ornithogalli", #all of the species up until this point were not pollinators, 
          #the rest are taken out due to lack of information about their diets as we can't properly determine
          #whether they are pollinators 
          species != "Limenitis astyanax", 
@@ -229,7 +233,31 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
          species != "Parallelia bistriaris", 
          species != "Phaeoura quernaria", 
          species != "Pseudothyatira cymatophoroides", 
-         species != "Zale minerea"
+         species != "Zale minerea", 
+         species != "Agrochola bicolorago", 
+         species != "Chlorochlamys chloroleucaria", 
+         species != "Clepsis peritana", 
+         species != "Ectropis crepuscularia", 
+         species != "Elaphria versicolor", 
+         species != "Eutrapela clemataria", 
+         species != "Galgula partita", 
+         species != "Glenoides texanaria", 
+         species != "Horisme intestinata", 
+         species != "Hypena scabra", 
+         species != "Ilexia intractata", 
+         species != "Iridopsis defectaria", 
+         species != "Iridopsis larvaria", 
+         species != "Melanolophia canadaria", 
+         species != "Microcrambus elegans", 
+         species != "Phoberia atomaris", 
+         species != "Zale lunata", 
+         species != "Acrolophus plumifrontella", 
+         species != "Argyrotaenia quercifoliana", 
+         species != "Argyrotaenia velutinana", 
+         species != "Bleptina caradrinalis", 
+         species != "Crambus agitatellus", 
+         species != "Elophila obliteralis", 
+         species != "Hypsoropha hormos"
   )
 unique(phenology_estimates_all_species_each_grid_with_GHMI$species) #double check new species list
 
@@ -277,8 +305,8 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
 
 # Let's see how many phenology estimates exceeded 365 days of year 
 sum(phenology_estimates_all_species_each_grid_with_GHMI$onset > 365, na.rm = TRUE) #no instances
-sum(phenology_estimates_all_species_each_grid_with_GHMI$offset > 365, na.rm = TRUE) #21 instances 
-sum(phenology_estimates_all_species_each_grid_with_GHMI$duration > 365, na.rm = TRUE) #2 instances 
+sum(phenology_estimates_all_species_each_grid_with_GHMI$offset > 365, na.rm = TRUE) #13 instances 
+sum(phenology_estimates_all_species_each_grid_with_GHMI$duration > 365, na.rm = TRUE) #1 instance 
 
 # We need to investigate these values
 overestimates <- phenology_estimates_all_species_each_grid_with_GHMI %>%
@@ -286,7 +314,7 @@ overestimates <- phenology_estimates_all_species_each_grid_with_GHMI %>%
   print()
 
 # Example species and grid from suspicious list, e.g. Hypena scabra at grid 68
-species_of_interest <- "Hypena scabra"
+species_of_interest <- "Lambdina fervidaria"
 grid_of_interest <- 68
 
 # Subset the data, make sure we are only using the species used in our phenology_estimates_all_species_each_grid_with_GHMI df
@@ -318,7 +346,7 @@ phenology_estimates_all_species_each_grid_with_GHMI %>%
   select(onset, median, offset, duration) %>%
   print()
 
-# For this sample species, n is high so that likely isn't the issue. We are likely getting an estimate over 
+# For this sample species, n isn't terribly low so it may not be the isssue. We are likely getting an estimate over 
 #365 because the data are left-skewed, so the Weibull distribution tries to fit this shape and goes over 
 #the 365 day mark. Let's see if this is happening with the other weird estimates: 
 
@@ -347,12 +375,7 @@ print(skewness_suspicious, n=21)
 
 #Negative skewness values indicate left-skewness (tail on left side). Positive skewness means right-skew.
 #Most of the weird phenology estimates are left-skewed. Many of the largest left (negative) skews are 
-#with relatively small sample sizes (n_obs).  The exception to this is Hypena scabra in grids 83 and 8520. 
-#In grid 80, there is a peak near the end of the year (left skew), which could cause the Weibull distribution
-#to try to fit around this peak and go over the 365 day mark (since this is clustered near that value), wrapping 
-#around past the calendar year. For grid 8520, it looks like there is pretty consistent year-round values and 
-#a lack of distinct seasonality. Phenesse produces impossible estimates in this case because it is trying to
-#find seasonality where there is none. So it looks like a low sample size and strong negative skew = high risk 
+#with relatively small sample sizes (n_obs). So it looks like a low sample size and strong negative skew = high risk 
 #of offset/duration > 365 days. Larger sample size can reduce overestimation, but left skewness alone can 
 #push estimates past 365. We do see some moderate negative skews with moderate n. This suggests that sample 
 #size helps but skew can still produce weird estimates. In these cases, the right skew is causing the right 
@@ -361,49 +384,37 @@ print(skewness_suspicious, n=21)
 #and low sample size. Larger sample size can reduce some of the overestimation but not entirely prevent it. 
 
 
-# Let's investigate the right skews to confirm  
+# Let's investigate the right skew to confirm  
 
-# Subset species-grid combos to investigate the right skew
-right_skewed_subset <- right_skewed %>%
-  filter(species %in% c("Iridopsis defectaria", "Clogmia albipunctatus"))
+# Specify species-grid combo to investigate the right skew
+sp <- "Clogmia albipunctatus"
+this_grid <- 16896
 
-# Loop over each species-grid and make plots and summaries
-for(i in seq_len(nrow(right_skewed_subset))) {
-  sp <- right_skewed_subset$species[i]
-  this_grid <- right_skewed_subset$grid_id[i]
-  
-  message(paste0("Investigating ", sp, " in grid ", this_grid))
-  
-  # Pull observations for this species-grid
-  obs <- filtered_5 %>%
-    filter(species == sp, grid_id == this_grid) %>%
-    mutate(day_of_year = as.integer(yday(eventDate))) %>%
-    filter(day_of_year > 0)
-  
-  # Summary stats
-  print(summary(obs$day_of_year))
-  cat("Number of observations:", nrow(obs), "\n")
-  
-  # Histogram of day-of-year
-  p <- ggplot(obs, aes(x = day_of_year)) +
-    geom_histogram(binwidth = 5, fill = "orange", color = "black") +
-    ggtitle(paste0("Day of year distribution for ", sp, " in grid ", this_grid))
-  print(p)
-  
-  # Pull phenology estimate for just this species-grid
-  phenos <- phenology_estimates_all_species_each_grid_with_GHMI %>%
-    filter(species == sp, grid == this_grid)
-  print(phenos)
-  
-  cat("\n-----\n")
-}
+# Pull observations for this species-grid
+obs <- filtered_5 %>%
+  filter(species == sp, grid_id == this_grid) %>%
+  mutate(day_of_year = as.integer(yday(eventDate))) %>%
+  filter(day_of_year > 0)
+
+# Summary stats
+print(summary(obs$day_of_year))
+cat("Number of observations:", nrow(obs), "\n")
+
+# Histogram of day-of-year
+p <- ggplot(obs, aes(x = day_of_year)) +
+  geom_histogram(binwidth = 5, fill = "orange", color = "black") +
+  ggtitle(paste0("Day of year distribution for ", sp, " in grid ", this_grid))
+print(p)
+
+# Pull phenology estimate for just this species-grid
+phenos <- phenology_estimates_all_species_each_grid_with_GHMI %>%
+  filter(species == sp, grid == this_grid)
+print(phenos)
 
 
-#For both species, the right skews are actually quite weak. Clogmia albipunctatus in grid 16896 shows two peaks
+#The right skew is actually quite weak. Clogmia albipunctatus in grid 16896 shows two peaks
 #with continuous activity between peaks. Because of this weakly bimodal distribution, Weibull is treating
-#these peaks as one long season. Iridopsis defectaria in grid 1217 is more scattered, with some spikes in 
-#activity but year-round activity as well. Again, the Weibull distribution is being fitted across the entire
-#season and over-estimating. So right skew causes estimation issues, but the real issue seems to be 
+#these peaks as one long season. So right skew causes estimation issues, but the real issue seems to be 
 #continuous (year-round) activity and bimodality. 
 
 
@@ -428,7 +439,7 @@ suspicious_bimodal <- overestimates %>%
 
 # View how many suspicious estimates are also bimodal
 print(suspicious_bimodal)
-#4 of the 21 suspicious estimates were bimodal. 
+#Only 1 of the 13 suspicious estimates were bimodal. 
 
 # Now join with skewness and sample size info, just so we can compare 
 suspicious_bimodal_with_skew <- suspicious_bimodal %>%
@@ -437,15 +448,14 @@ suspicious_bimodal_with_skew <- suspicious_bimodal %>%
 # View result
 print(suspicious_bimodal_with_skew)
 
-#Although there are many instances of bimodality in my data set, only a few produced biologically impossible
-#estimates. This means that bimodality alone will not cause overestimation. Overestimation occurs when: 
+#Bimodality alone will not cause overestimation. Overestimation occurs when: 
 # a) the peaks are far apart with lots of activity between them, causing the Weibull distribution to be 
 #fitted as one long season, b) peaks are clustered near the beginning and end of year, so that the 
 #distribution/estimation to "wrap around" the calendar year, and c) sample size is too small for the peaks 
 #to be detected. 
 
 
-# I'll compare these four cases of bimodality with overestimation to the rest of the cases of bimodality
+# I'll compare this case of bimodality with overestimation to the rest of the cases of bimodality
 # that didn't cause overestimation in my data set. 
 
 
@@ -483,8 +493,9 @@ all_bimodal <- all_bimodal %>%
   left_join(peak_separation_data, by = c("species" = "species", "grid_id" = "grid_id"))
 
 
-# Get durations from phenology estimates
+# Get offsets from phenology estimates
 all_bimodal <- all_bimodal %>%
+  select(species, grid_id, peak_separation, overestimated)%>%
   left_join(
     phenology_estimates_all_species_each_grid_with_GHMI %>%
       select(species, grid, offset),
@@ -515,42 +526,9 @@ all_bimodal %>%
 
 #This plot shows that, generally, as the amount of separation between peaks in a bimodal distribution 
 #increases, the estimated offset of species-grid combos with bimodal distribution increases as well. 
-#Offset estimates are also higher when peak separation is very low. Our cases of bimodal distributions
-#that produced biologically impossible estimates either had very high or very low peak separation. # Get durations from phenology estimates
-all_bimodal <- all_bimodal %>%
-  left_join(
-    phenology_estimates_all_species_each_grid_with_GHMI %>%
-      select(species, grid, offset),
-    by = c("species" = "species", "grid_id" = "grid")
-  )
-
-# Plot it
-ggplot(all_bimodal, aes(x = peak_separation, y = offset, color = overestimated)) +
-  geom_point(size = 3, alpha = 0.7) +
-  scale_color_manual(values = c("gray", "red")) +
-  labs(title = "Phenology duration vs. peak separation",
-       x = "Peak separation (days)",
-       y = "Estimated offset (days)",
-       color = "Overestimated Offset/Bimodal") +
-  theme_minimal()
-
-
-# Summary stats for comparison
-all_bimodal %>%
-  group_by(overestimated) %>%
-  summarise(
-    mean_peak_sep = mean(peak_separation, na.rm = TRUE),
-    mean_duration  = mean(offset, na.rm = TRUE),
-    n_cases        = n(),
-    .groups = "drop"
-  ) %>%
-  print()
-
-#This plot shows that, generally, as the amount of separation between peaks in a bimodal distribution 
-#increases, the estimated offset of species-grid combos with bimodal distribution increases as well. 
-#Offset estimates are also higher when peak separation is very low. Of the 4 cases of bimodal distributions
-#that produced biologically impossible estimates, one had very low peak separation and the rest had moderate
-#peak separation. This figure shows that peak separation can contribute to overestimation, as there is a 
+#Offset estimates are also higher when peak separation is very low. Our case of bimodal distribution
+#that produced biologically impossible estimates either had very high or very low peak separation. 
+#This figure shows that peak separation can contribute to overestimation, as there is a 
 #trend toward higher estimation with more extreme (high/low) peak separation, but that bimodality and 
 #peak separation alone do not cause overestimation. 
 
@@ -662,6 +640,9 @@ ggplot(obs_suspicious, aes(x = day_of_year)) +
 # that this is not an issue with the entire data set and the way we were estimating phenology
 phenology_filtered <- phenology_estimates_all_species_each_grid_with_GHMI %>%
   filter(!(offset > 365 | duration > 365))
+
+#Look at new species 
+unique(phenology_filtered$species)
 
 #Check that it worked
 sum(phenology_filtered$offset > 365, na.rm = TRUE)  

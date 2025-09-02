@@ -123,7 +123,7 @@ gam_1 <- gam(duration ~ mean_GHMI +
              family = gaussian(),
              method = "REML",
              data=fp_data)
-summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0312), as is species (<2e-16) and lat/long(<2e-16)
+summary(gam_1) #GHMI is a sig. predictor of duration (p=0.029), as is species (<2e-16) and lat/long(<2e-16)
 gam.check(gam_1)
 gam.check(gam_1)$k.check
 #The mean GHMI seems to explain very little deviance in the model, species and lat/long explain much 
@@ -306,7 +306,7 @@ gam_1_off <- gam(offset ~ mean_GHMI +
                  family = gaussian(),
                  method = "REML",
                  data=fp_data)
-summary(gam_1_off) #GHMI is a sig. predictor of offset (p=1.42e-08)
+summary(gam_1_off) #GHMI is a sig. predictor of offset (p=3.24e-09)
 gam.check(gam_1_off) #not much difference in deviance explained between this model and the null 
 
 # Now let's see how they rank
@@ -530,21 +530,18 @@ species_gam_significant <- species_gam %>%
   filter(GHMI_pval < 0.05,
          model_weight_comp_null > 0.75,
          adj_r2 > 0)
-unique(species_gam_significant$species) #24 species sig. 
-unique(species_gam_significant$species[species_gam_significant$model=="onset"]) #9 sig. for onset 
-unique(species_gam_significant$species[species_gam_significant$model=="offset"]) #13 sig. for offset
+unique(species_gam_significant$species) #21 species sig. 
+unique(species_gam_significant$species[species_gam_significant$model=="onset"]) #7 sig. for onset 
+unique(species_gam_significant$species[species_gam_significant$model=="offset"]) #12 sig. for offset
 unique(species_gam_significant$species[species_gam_significant$model=="duration"]) #7 sig. for duration 
 
 
 # =  species only onset 
 #  = species duration only 
-#  = 3 species offset only 
+#  =  species offset only 
 
 #  =  species onset and duration
 #  = species offset and duration only 
-
-
-
 
 
 
@@ -567,10 +564,9 @@ species_no_spatial_effect <- spatial_summary %>%
 
 print(species_no_spatial_effect)
 
-#For the following 9 species, spatial location is not influencing phenology beyond what GHMI explains:
-#"Argyrotaenia velutinana", "Bombus impatiens", "Epargyreus clarus", "Eremnophila aureonotata",
-#"Helicoverpa zea", "Hypsoropha hormos", "Papilio troilus", "Phyciodes tharos",       
-#and "Pyrrharctia isabella"
+#For the following 7 species, spatial location is not influencing phenology beyond what GHMI explains:
+#""Bombus impatiens", "Epargyreus clarus", "Eremnophila aureonotata", "Helicoverpa zea",
+#"Papilio troilus", "Phyciodes tharos", "Pyrrharctia isabella" 
 
 #Species where lat/long is sig.
 species_with_spatial_effect <- spatial_summary %>%
@@ -578,11 +574,11 @@ species_with_spatial_effect <- spatial_summary %>%
   pull(species)
 print(species_with_spatial_effect)
 
-# For the following 15 species, at lat/long is sig. influencing at least one phenology variables 
+# For the following 14 species, at lat/long is sig. influencing at least one phenology variables 
 # beyond what GHMI explains: "Clogmia albipunctatus"    "Xylocopa virginica"       "Apis mellifera"           "Battus philenor"         
 # "Danaus plexippus"         "Eristalis tenax"          "Euclea delphinii"         "Hylephila phyleus"       
 # "Hypoprepia fucosa"        "Limenitis arthemis"       "Noctua pronuba"           "Papilio glaucus"         
-# "Spodoptera ornithogalli"  "Tetraopes tetrophthalmus" "Vespula squamosa" 
+# ""Tetraopes tetrophthalmus" "Vespula squamosa" 
 
 
 # Looking at which models have spatial significance for each species: 
@@ -595,18 +591,17 @@ sig_spatial_summary <- sig_spatial_models %>%
   group_by(species) %>%
   summarize(significant_models = paste(model, collapse = ", "))
 
-print(sig_spatial_summary, n=26)
+print(sig_spatial_summary, n=14)
 
-# For the following  9 species, at lat/long is sig. influencing offset beyond what GHMI explains: Battus philenor,
-# Danaus plexippus, Euclea delphinii, Hylephila phyleus, Limenitis arthemis, Noctua pronuba, Papilio glaucus,          offset            
-# Spodoptera ornithogalli, Tetraopes tetrophthalmus
+# For the following  8 species, at lat/long is sig. influencing offset beyond what GHMI explains: 
+# Battus philenor, Danaus plexippus, Euclea delphinii, Hylephila phyleus, Limenitis arthemis, 
+# Noctua pronuba, Papilio glaucus, Tetraopes tetrophthalmus
 
-# For the following 4 species, at lat/long is sig. influencing onset beyond what GHMI explains: Clogmia albipunctatus, 
-# Eristalis tenax, Vespula squamosa, Xylocopa virginica
+# For the following 4 species, at lat/long is sig. influencing onset beyond what GHMI explains: 
+# Clogmia albipunctatus, Eristalis tenax, Vespula squamosa, Xylocopa virginica
 
-# For the following 4 species, at lat/long is sig. influencing duration beyond what GHMI explains: Apis mellifera, 
-# Clogmia albipunctatus, Hypoprepia fucosa, Xylocopa virginica
-
+# For the following 4 species, at lat/long is sig. influencing duration beyond what GHMI explains: 
+# Apis mellifera, Clogmia albipunctatus, Hypoprepia fucosa, Xylocopa virginica
 
 
 
@@ -735,17 +730,18 @@ print(sig_spatial_summary)
 
 
 # Separate species into what phenology variable GHMI sig. predicts, based on GAM models: 
-onset_species <- c("Xylocopa virginica", "Papilio troilus", "Argyrotaenia velutinana", 
-                   "Eremnophila aureonotata", "Eristalis tenax", "Vespula squamosa", "Clogmia albipunctatus",
-                   "Hypsoropha hormos","Helicoverpa zea")
+onset_species <- c("Xylocopa virginica", "Papilio troilus", "Eremnophila aureonotata",
+                   "Eristalis tenax", "Vespula squamosa", "Clogmia albipunctatus",   
+                   "Helicoverpa zea")
 
-offset_species <- c("Bombus impatiens", "Papilio glaucus", "Danaus plexippus", "Epargyreus clarus",       
-                    "Phyciodes tharos", "Hylephila phyleus", "Pyrrharctia isabella", "Battus philenor",         
-                    "Spodoptera ornithogalli", "Tetraopes tetrophthalmus", "Noctua pronuba", 
-                    "Euclea delphinii", "Limenitis arthemis")
+offset_species <- c("Bombus impatiens", "Papilio glaucus", "Danaus plexippus", "Epargyreus clarus",
+                    "Phyciodes tharos", "Hylephila phyleus",        
+                    "Pyrrharctia isabella", "Battus philenor", "Tetraopes tetrophthalmus",
+                    "Noctua pronuba", "Euclea delphinii", "Limenitis arthemis" )
 
-duration_species <- c("Xylocopa virginica", "Apis mellifera", "Pyrrharctia isabella", "Papilio troilus",      
-                      "Hypoprepia fucosa", "Noctua pronuba")
+duration_species <- c("Xylocopa virginica", "Apis mellifera", "Pyrrharctia isabella", 
+                      "Papilio troilus", "Hypoprepia fucosa", "Noctua pronuba", 
+                      "Clogmia albipunctatus")
 
 
 
@@ -753,7 +749,7 @@ duration_species <- c("Xylocopa virginica", "Apis mellifera", "Pyrrharctia isabe
 
 
 # Build plot function
-plot_model_group <- function(species_vec, model_name, ncol = 2) {
+plot_model_group <- function(species_vec, model_name, ncol = 3) {
   plots <- lapply(species_vec, function(sp) {
     gam_obj <- species_gam_full[[sp]]$models[[model_name]]
     
@@ -807,18 +803,18 @@ plot_model_group(duration_species, "duration")
 #2   Later onset, shorter duration: Papilio troilus
 #3   Later offset, longer duration: Pyrrharctia isabella, Noctua pronuba
 
-#4   Later onset: Argyrotaenia velutinana, Eristalis tenax, Hypsoropha hormos, Helicoverpa zea
+#4   Later onset: Eristalis tenax, Helicoverpa zea
 #5   Earlier onset: Eremnophila aureonotata, Vespula squamosa, Clogmia albipunctatus
-#6   Later offset: Bombus impatiens, Papilio glaucus, Danaus plexippus, Epargyreus clarus, Phycoides tharos,
+#6   Later offset: Bombus impatiens, Papilio glaucus, Danaus plexippus, Epargyreus clarus, Phyciodes tharos,
 #7                 Battus philenor, Limenitis arthemis 
-#8   Earlier offset: Hylephila phyleus, Spodoptera ornithogalli, Tetraopes tetrophthalmus, Euclea delphinii
+#8   Earlier offset: Hylephila phyleus, Tetraopes tetrophthalmus, Euclea delphinii
 #9   Longer duration: Apis mellifera, Hyproprepia fucosa
 
 # 1-3 make sense, 4-9 make less sense. For example, if onset starts later in the year for more urban areas, why aren't we 
 # seeing total duration being decreased in these urban areas as well? If the species starts its season later (and doesn't 
 # end later), that would mean less days of activity. But we're not seeing that, so what gives? 
 
- 
+
 
 # Save the plots 
 ggsave("Figures/GAM_onset_species.png", plot_model_group(onset_species, "onset"), 
