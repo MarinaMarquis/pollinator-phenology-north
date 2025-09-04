@@ -62,13 +62,13 @@
 #                e)  mean_gHM.csv
 #                f)  phenology_estimates_data_for_analysis.rds
 #         Output = 
-#                 a) frequency_Dione_vanillae_observations_over_time_grid_4145.png 
-#                 b) frequency_Apis_mellifera_observations_over_time_grid_4145.png
-#                 c) frequency_Danaus_plexippus_observations_over_time_grid_4145.png
-#                 d) frequency_Erynnis_horatius_observations_over_time_grid_4145.png
-#                 e) frequency_Apis_mellifera_observations_over_time_grid_7.png
-#                 f) frequency_all_species_observations_over_time_grid_4145.png
-#                 g) frequency_Apis_mellifera_observations_over_time_all_grids.png
+#                 a) frequency_Dione_vanillae_observations_over_time_grid_1656.png 
+#                 b) frequency_Bombus_impatiens_observations_over_time_grid_1656.png
+#                 c) frequency_Phoebis_sennae_observations_over_time_grid_1656.png
+#                 d) frequency_Epargyreus_clarus_observations_over_time_grid_1656.png
+#                 e) frequency_Hylephila_phyleus_observations_over_time_grid_1656.png
+#                 f) frequency_all_species_observations_over_time_grid_1656.png
+#                 g) frequency_Bombus_impatiens_observations_over_time_all_grids.png
 #                 h) observation_frequency_over_time_by_family.png
 #                 i) observation_frequency_over_time_by_order.png
 #                 j) observations_with_landsat_variables.rds
@@ -77,11 +77,11 @@
 #                 m) Dione_vanillae_Observations_in_Low_and_High_GHMI_two_figures.png
 #                 n) map_of_species_per_grid_cell.png
 #                 o) map_of_observations_per_grid_cell.png
-#                 p) GHMI_map_of_Florida.png
-#                 q) Dione_vanillae_observations_across_grids.png
-#                 r) Apis_mellifera_observations_across_grids.png
-#                 s) Danaus_plexippus_observations_across_grids.png
-#                 t) Anartia_jatrophae_observations_across_grids
+#                 p) GHMI_map_of_Bioregion_NA24.png
+#                 q) Bombus_impatiens_observations_across_grids.png
+#                 r) Papilio_glaucus_observations_across_grids.png
+#                 s) Xylocopa_virginica_observations_across_grids.png
+#                 t) Apis_mellifera_observations_across_grids.png
 
 
 ###### 9. Phenology Figures.R

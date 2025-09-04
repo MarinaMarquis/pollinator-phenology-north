@@ -123,16 +123,25 @@ gam_1 <- gam(duration ~ mean_GHMI +
              family = gaussian(),
              method = "REML",
              data=fp_data)
-summary(gam_1) #GHMI is a sig. predictor of duration (p=0.029), as is species (<2e-16) and lat/long(<2e-16)
+summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0452), as is species (<2e-16) and lat/long(<2e-16)
 gam.check(gam_1)
 gam.check(gam_1)$k.check
 #The mean GHMI seems to explain very little deviance in the model, species and lat/long explain much 
 #more variation. Model fit not much higher than null model. 
 
+
 # Now let's see how they rank
 AIC(gam_null)
 AIC(gam_1)
 # So in this case the null model performed worse but not by much, so adding GHMI does not help explain duration
+
+#Getting model weight 
+aic_val <- c(31611.94, 31610.20)
+delta_aic <- aic_val - min(aic_val)
+weights <- exp(-0.5 * delta_aic) / sum(exp(-0.5 * delta_aic))
+weights #(null, duration model)
+
+
 
 # Let's repeat for an individual species
 gam_null_bi <- gam(duration ~ 1 + s(lat, lon, k = 10, bs="tp"), 
@@ -227,6 +236,12 @@ AIC(gam_null_on)
 AIC(gam_1_on)
 #In this case, adding GHMI does not better the fit of the model 
 
+#Getting model weight 
+aic_val_on <- c(31526.88, 31528.02)
+delta_aic_on <- aic_val_on - min(aic_val_on)
+weights_on <- exp(-0.5 * delta_aic_on) / sum(exp(-0.5 * delta_aic_on))
+weights_on #(null, duration model)
+
 # Let's repeat for an individual species
 gam_null_bi_on <- gam(onset ~ 1 + s(lat, lon, k = 10, bs="tp"), 
                       family = Gamma(link = "log"),
@@ -306,13 +321,19 @@ gam_1_off <- gam(offset ~ mean_GHMI +
                  family = gaussian(),
                  method = "REML",
                  data=fp_data)
-summary(gam_1_off) #GHMI is a sig. predictor of offset (p=3.24e-09)
+summary(gam_1_off) #GHMI is a sig. predictor of offset (p=6.79e-09)
 gam.check(gam_1_off) #not much difference in deviance explained between this model and the null 
 
 # Now let's see how they rank
 AIC(gam_null_off)
 AIC(gam_1_off)
 #Adding GHMI improves model fit 
+
+#Getting model weight 
+aic_val_off <- c(29084.17, 29076.45)
+delta_aic_off <- aic_val_off - min(aic_val_off)
+weights_off <- exp(-0.5 * delta_aic_off) / sum(exp(-0.5 * delta_aic_off))
+weights_off #(null, duration model)
 
 # Let's repeat for an individual species
 gam_null_bi_off <- gam(offset ~ 1 + s(lat, lon, k = 10, bs="tp"), 
@@ -515,7 +536,12 @@ write_csv(species_gam, "Data/GAM_results/gam_results_by_species.csv")
 
 
 
+# Table with only species that have p-values < 0.05
+species_gam_significant_p_only <- species_gam %>%
+  filter(GHMI_pval < 0.05)
 
+# Save it 
+write_csv(species_gam_significant_p_only, "Data/GAM_results/species_gam_significant_p_only.csv")
 
 
 

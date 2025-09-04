@@ -139,7 +139,9 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
          species != "Idia americalis", 
          species != "Phosphila miselioides", 
          species != "Polygrammate hebraeicum", 
-         species != "Spodoptera ornithogalli", #all of the species up until this point were not pollinators, 
+         species != "Spodoptera ornithogalli", 
+         species != "Polistes exclamans", 
+         species != "Polistes dominula", #all of the species up until this point were not pollinators, 
          #the rest are taken out due to lack of information about their diets as we can't properly determine
          #whether they are pollinators 
          species != "Limenitis astyanax", 
@@ -257,7 +259,11 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
          species != "Bleptina caradrinalis", 
          species != "Crambus agitatellus", 
          species != "Elophila obliteralis", 
-         species != "Hypsoropha hormos"
+         species != "Hypsoropha hormos", 
+         species != "Sphecius speciosus", 
+         species != "Epipaschia superatalis", 
+         species != "Euclea delphinii", 
+         species != "Phalaenostola larentioides"
   )
 unique(phenology_estimates_all_species_each_grid_with_GHMI$species) #double check new species list
 
@@ -641,8 +647,17 @@ ggplot(obs_suspicious, aes(x = day_of_year)) +
 phenology_filtered <- phenology_estimates_all_species_each_grid_with_GHMI %>%
   filter(!(offset > 365 | duration > 365))
 
-#Look at new species 
-unique(phenology_filtered$species)
+#Look at new species and grids  
+unique(phenology_filtered$species) #111 species 
+unique(phenology_filtered$family) #27 families  
+unique(phenology_filtered$order) #4 orders 
+unique(phenology_filtered$grid) #282
+
+#how many grids per species 
+grid_per_spec <- phenology_filtered %>%
+  group_by (species)%>%
+  summarise(grid_per_spec = n_distinct(grid))
+grid_per_spec #Bombus impatiens found in most grids (190 grids)
 
 #Check that it worked
 sum(phenology_filtered$offset > 365, na.rm = TRUE)  
