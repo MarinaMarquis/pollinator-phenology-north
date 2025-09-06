@@ -78,3 +78,11 @@ plot(st_geometry(grid_adj_NA24_wgs))    # Reprojected WGS84 view
 # Export to GeoJSON for use in GBIF or elsewhere
 st_write(grid_adj_NA24_wgs, "Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson", delete_dsn = TRUE)
 
+# Export as Shapefile as well, for use in Google Earth Engine code editor 
+st_write(grid_adj_NA24_wgs, "Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.shp",
+         delete_dsn = TRUE)
+shp_dir2 <- "Data/Spatial Data/gridded map of NA24 region/"
+zipfile2 <- file.path(shp_dir2, "NA24_gridded_map.zip")
+files_to_zip2 <- list.files(shp_dir2, pattern = "NA24_gridded_map.*$", full.names = TRUE)
+zip(zipfile2, files_to_zip2)
+

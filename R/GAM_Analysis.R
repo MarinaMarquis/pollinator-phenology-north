@@ -763,7 +763,7 @@ onset_species <- c("Xylocopa virginica", "Papilio troilus", "Eremnophila aureono
 offset_species <- c("Bombus impatiens", "Papilio glaucus", "Danaus plexippus", "Epargyreus clarus",
                     "Phyciodes tharos", "Hylephila phyleus",        
                     "Pyrrharctia isabella", "Battus philenor", "Tetraopes tetrophthalmus",
-                    "Noctua pronuba", "Euclea delphinii", "Limenitis arthemis" )
+                    "Noctua pronuba", "Euclea delphinii", "Limenitis arthemis")
 
 duration_species <- c("Xylocopa virginica", "Apis mellifera", "Pyrrharctia isabella", 
                       "Papilio troilus", "Hypoprepia fucosa", "Noctua pronuba", 
