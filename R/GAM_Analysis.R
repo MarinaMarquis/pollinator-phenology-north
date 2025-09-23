@@ -8,6 +8,7 @@
 library(readr)
 library(tidyverse)
 library(mgcv)
+library(broom)
 library(sf)
 library(MuMIn)
 library(patchwork)
@@ -58,6 +59,63 @@ summary(fp_rel)
 cor(fp_rel, method="pearson")
 # I don't see anything too concerning here
 
+
+########################################################################################################### 
+### Let's explore the range of GHMI values in the data set: 
+
+summary(fp_rel$mean_GHMI)
+sd(fp_rel$mean_GHMI)
+
+# Plot it
+ggplot(fp_rel, aes(x = mean_GHMI)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  theme_classic() +
+  labs(x = "Mean GHMI", y = "Count",
+       title = "Distribution of GHMI in the data set")
+# Looks like there is some skew towards higher GHMI values in the data set 
+
+# Summarize by species 
+fp_data_summary <- fp_data %>%
+  group_by(species) %>%
+  summarise(min_GHMI = min(mean_GHMI, na.rm = TRUE),
+            max_GHMI = max(mean_GHMI, na.rm = TRUE),
+            n = n()) %>%
+  arrange(min_GHMI) %>%
+  print(n = 50)
+
+
+# Flagging all species with narrow GHMI ranges 
+check_species <- function(df) {
+  m <- gam(duration ~ s(mean_GHMI, k = min(5, length(unique(df$mean_GHMI)))),
+           data = df, method = "REML")
+  tibble(
+    n = nrow(df),
+    range = diff(range(df$mean_GHMI)),
+    sd = sd(df$mean_GHMI),
+    edf = summary(m)$edf[1]
+  )
+}
+
+results <- fp_data %>% group_by(species) %>% group_modify(~check_species(.x))
+print(results, n=111)
+
+
+# Removing species with a range less than 0.25 and a standard deviation less than 0.10 so that they
+# can be properly fitted to GAMs
+flagged_species <- results %>%
+  filter(range < 0.25 & sd < 0.1)
+fp_data <- fp_data %>%
+  filter(!species %in% flagged_species$species)
+
+summary(fp_data$mean_GHMI)
+sd(fp_data$mean_GHMI)
+
+# Quick visualization 
+ggplot(fp_data, aes(x = mean_GHMI)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  theme_classic() +
+  labs(x = "Mean GHMI", y = "Count",
+       title = "Distribution of GHMI in the data set after filtering")
 
 ########################################################################################################### 
 
@@ -123,7 +181,7 @@ gam_1 <- gam(duration ~ mean_GHMI +
              family = gaussian(),
              method = "REML",
              data=fp_data)
-summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0452), as is species (<2e-16) and lat/long(<2e-16)
+summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0486), as is species (<2e-16) and lat/long(<2e-16)
 gam.check(gam_1)
 gam.check(gam_1)$k.check
 #The mean GHMI seems to explain very little deviance in the model, species and lat/long explain much 
@@ -321,7 +379,7 @@ gam_1_off <- gam(offset ~ mean_GHMI +
                  family = gaussian(),
                  method = "REML",
                  data=fp_data)
-summary(gam_1_off) #GHMI is a sig. predictor of offset (p=6.79e-09)
+summary(gam_1_off) #GHMI is a sig. predictor of offset (p=9.25e-09)
 gam.check(gam_1_off) #not much difference in deviance explained between this model and the null 
 
 # Now let's see how they rank
@@ -556,9 +614,9 @@ species_gam_significant <- species_gam %>%
   filter(GHMI_pval < 0.05,
          model_weight_comp_null > 0.75,
          adj_r2 > 0)
-unique(species_gam_significant$species) #21 species sig. 
+unique(species_gam_significant$species) #20 species sig. 
 unique(species_gam_significant$species[species_gam_significant$model=="onset"]) #7 sig. for onset 
-unique(species_gam_significant$species[species_gam_significant$model=="offset"]) #12 sig. for offset
+unique(species_gam_significant$species[species_gam_significant$model=="offset"]) #11 sig. for offset
 unique(species_gam_significant$species[species_gam_significant$model=="duration"]) #7 sig. for duration 
 
 
@@ -658,6 +716,55 @@ effects_duration <- effects %>%
   arrange(desc(GHMI_estimate))
 print(effects_duration)
 
+#Let's figure out why Clogmia albipunctatus has a very large duration effect size 
+C_albipunctatus_data <- fp_data %>%
+  filter(species == "Clogmia albipunctatus") %>%
+  summarise(range = diff(range(mean_GHMI)),
+            sd    = sd(mean_GHMI))%>%
+  print()
+# SD and range do not seem problematic 
+
+#Look at model 
+model <- species_gam_full[["Clogmia albipunctatus"]]$models$duration
+plot(model, pages = 1)
+gam.check(model)
+
+#Look at Cook's distance 
+cooks <- cooks.distance(model)
+cooks
+plot(cooks, type="h"); abline(h = 4/length(cooks), col="red")
+#It looks like one duration estimate for a grid cell is an outlier and throwing off the estimate. 
+#This is likely able to inflate the estimate so much because of the small sample size (n=9) used
+#in this model. 
+
+#Refit the model without this point to see if it changes the results of the original model by much 
+fp_data_clogmia <- fp_data %>%
+  filter(species == "Clogmia albipunctatus")
+
+model <- species_gam_full[["Clogmia albipunctatus"]]$models$duration
+cooks <- cooks.distance(model)
+i_bad <- which.max(cooks)
+fp_data_clogmia_no1 <- fp_data_clogmia[-i_bad, ]
+
+k_val <- ifelse(nrow(fp_data_clogmia_no1) <= 20,
+                nrow(fp_data_clogmia_no1) - 1,
+                20)
+
+m_no1 <- gam(duration ~ mean_GHMI + s(lat, lon, k = k_val, bs = "tp"),
+             family = gaussian(),
+             method = "REML",
+             data = fp_data_clogmia_no1)
+
+summary(m_no1)
+gam.check(m_no1)
+#Okay so the outlier didn't change the model results by much. This means that this "extreme" 
+#estimate is actually due to interpretation of days over a narrow range of GHMI values. For 
+#every 1.0 increase in GHMI, predicted flight-period duration lengthens by about 500 days. However, 
+#this species does not have the full range of GHMI values (only spans 0.38). So it's actually 
+#0.38 × 500 ≈ 190 days. Worded as: The model estimates that flight-period duration increases by 
+#roughly 500 days per 1.0-unit increase in GHMI, which translates to about 190 days over the 
+#0.38-unit GHMI range actually observed for this species.
+
 
 # Do a count of the effects and their direction 
 interpret_ghmi_effect <- function(df) {
@@ -738,7 +845,7 @@ species_gam_significant %>%
 species_gam_significant %>%
   group_by(model) %>%
   arrange(model, desc(dev_exp)) %>%
-  select(model, species, dev_exp, adj_r2)%>%
+  dplyr::select(model, species, dev_exp, adj_r2)%>%
   print(n=29)
 
 # Now compare this list of models with the models that have sig. of the spatial smooth (lat/long): 
@@ -763,7 +870,7 @@ onset_species <- c("Xylocopa virginica", "Papilio troilus", "Eremnophila aureono
 offset_species <- c("Bombus impatiens", "Papilio glaucus", "Danaus plexippus", "Epargyreus clarus",
                     "Phyciodes tharos", "Hylephila phyleus",        
                     "Pyrrharctia isabella", "Battus philenor", "Tetraopes tetrophthalmus",
-                    "Noctua pronuba", "Euclea delphinii", "Limenitis arthemis")
+                    "Noctua pronuba", "Limenitis arthemis")
 
 duration_species <- c("Xylocopa virginica", "Apis mellifera", "Pyrrharctia isabella", 
                       "Papilio troilus", "Hypoprepia fucosa", "Noctua pronuba", 
@@ -823,25 +930,6 @@ plot_model_group(onset_species, "onset")
 plot_model_group(offset_species, "offset")
 plot_model_group(duration_species, "duration")
 
-### Relationships summary: In more urban areas, 
-
-#1   Earlier onset, longer duration: Xylocopa virginica
-#2   Later onset, shorter duration: Papilio troilus
-#3   Later offset, longer duration: Pyrrharctia isabella, Noctua pronuba
-
-#4   Later onset: Eristalis tenax, Helicoverpa zea
-#5   Earlier onset: Eremnophila aureonotata, Vespula squamosa, Clogmia albipunctatus
-#6   Later offset: Bombus impatiens, Papilio glaucus, Danaus plexippus, Epargyreus clarus, Phyciodes tharos,
-#7                 Battus philenor, Limenitis arthemis 
-#8   Earlier offset: Hylephila phyleus, Tetraopes tetrophthalmus, Euclea delphinii
-#9   Longer duration: Apis mellifera, Hyproprepia fucosa
-
-# 1-3 make sense, 4-9 make less sense. For example, if onset starts later in the year for more urban areas, why aren't we 
-# seeing total duration being decreased in these urban areas as well? If the species starts its season later (and doesn't 
-# end later), that would mean less days of activity. But we're not seeing that, so what gives? 
-
-
-
 # Save the plots 
 ggsave("Figures/GAM_onset_species.png", plot_model_group(onset_species, "onset"), 
        width = 8, height = 8, dpi = 300)
@@ -856,6 +944,143 @@ ggsave("Figures/GAM_duration_species.png", plot_model_group(duration_species, "d
 
 
 
+
+
+### Relationships summary: In more urban areas, 
+
+#1   Earlier onset, longer duration: Xylocopa virginica
+#2   Later onset, shorter duration: Papilio troilus
+#3   Later offset, longer duration: Pyrrharctia isabella, Noctua pronuba
+
+#4   Later onset: Eristalis tenax, Helicoverpa zea
+#5   Earlier onset: Eremnophila aureonotata, Vespula squamosa, Clogmia albipunctatus
+#6   Later offset: Bombus impatiens, Papilio glaucus, Danaus plexippus, Epargyreus clarus, Phyciodes tharos,
+#7                 Battus philenor, Limenitis arthemis 
+#8   Earlier offset: Hylephila phyleus, Tetraopes tetrophthalmus
+#9   Longer duration: Apis mellifera, Hyproprepia fucosa
+
+# 1-3 make sense, 4-9 make less sense. For example, if onset starts later in the year for more urban areas, why aren't we 
+# seeing total duration being decreased in these urban areas as well? If the species starts its season later (and doesn't 
+# end later), that would mean less days of activity. But we're not seeing that, so what gives? 
+
+# We need to investigate this. Because flight period duration is derived from the difference 
+#between onset and offset, and both onset and offset are estimated from the same observations, 
+#their estimation errors can be correlated. This means that even when GHMI significantly predicts 
+#onset or offset, the corresponding duration model may not show a significant effect. Let's 
+#calculate delta duration by hand as the difference between the predicted offset and onset 
+#for high versus low GHMI values: 
+#delta duration =(predicted offset at high GHMI − predicted onset at high GHMI) − (predicted 
+# offset at low GHMI − predicted onset at low GHMI). 
+#This gives us the expected change in duration associated with a change in GHMI, independent of 
+#the statistical significance of the duration model itself. By comparing delta duration 
+#across species, we can identify cases where onset or offset shifts substantially but 
+#duration shows little or inconsistent change, helping to explain the “weird” cases in our models.
+
+#Splitting up sig. models by phenological estimate 
+sig_onset <- unique(species_gam_significant$species[species_gam_significant$model == "onset"])
+sig_offset <- unique(species_gam_significant$species[species_gam_significant$model == "offset"])
+sig_duration <- unique(species_gam_significant$species[species_gam_significant$model == "duration"])
+
+
+#Weird species model cases: onset or offset significant, duration not
+weird_species <- setdiff(union(sig_onset, sig_offset), sig_duration)
+
+#Function to calculate delta duration
+calc_delta_duration <- function(sp) {
+  onset_mod <- species_gam_full[[sp]]$models$onset
+  offset_mod <- species_gam_full[[sp]]$models$offset
+  
+  # get predicted onset/offset at low and high GHMI
+  pred_data <- tibble(
+    mean_GHMI = c(0, 1),
+    lat = mean(onset_mod$model$lat),
+    lon = mean(onset_mod$model$lon)
+  )
+  
+  pred_onset <- predict(onset_mod, newdata = pred_data)
+  pred_offset <- predict(offset_mod, newdata = pred_data)
+  
+  delta <- (pred_offset[2] - pred_onset[2]) - (pred_offset[1] - pred_onset[1])
+  
+  tibble(
+    species = sp,
+    delta_duration = delta,
+    duration_low = pred_offset[1] - pred_onset[1],
+    duration_high = pred_offset[2] - pred_onset[2]
+  )
+}
+
+delta_weird <- bind_rows(lapply(weird_species, calc_delta_duration))
+delta_weird
+
+#Duration is a function of both onset and offset. When both shift in the same direction, the net 
+#change in duration can be minimal, resulting in no significance for the duration model. This can 
+#also be caused by correlated estimation errors between onset and offset, even when onset or 
+#offset shifts significantly.
+
+
+# Make sure delta_on_off exists (replace these example values with your actual onset/offset deltas)
+delta_on_off <- delta_weird %>%
+  dplyr::mutate(
+    delta_onset = c(-29.9, 93.6, -177, 121, 28.3, 21.2, 23.0, 27.2, 33.0, -44.7, 61.8, -30.6, 77.3),  # replace with actual
+    delta_offset = c(250-280, 346-253, 241-417, 337-216, 292-263, 256-234, 285-262, 247-220, 284-251, 265-309, 289-228, 187-217, 277-200) # replace with actual
+  )
+
+# Combine delta_weird with onset/offset deltas
+delta_combined <- delta_weird %>%
+  dplyr::left_join(
+    delta_on_off %>% dplyr::select(species, delta_onset, delta_offset),
+    by = "species"
+  ) %>%
+  tidyr::pivot_longer(
+    cols = c(delta_duration, delta_onset, delta_offset),
+    names_to = "phenology_variable",
+    values_to = "delta_days"
+  ) %>%
+  dplyr::mutate(
+    phenology_variable = recode(
+      phenology_variable,
+      delta_duration = "Duration",
+      delta_onset = "Onset",
+      delta_offset = "Offset"
+    )
+  )
+#Add SE bars. Each SE bar shows the predicted delta, and the uncertainty (±2 SE) for onset, offset, 
+#and duration. This shows that the predicted duration (net change in duration) might be small (close to
+#zero)
+delta_combined <- delta_combined %>%
+  mutate(se_days = case_when(
+    phenology_variable == "Duration" ~ 50,  # replace with actual SE
+    phenology_variable == "Onset"    ~ 30,
+    phenology_variable == "Offset"   ~ 30
+  ))
+
+
+# Plot it
+ggplot(delta_combined, aes(x = reorder(species, delta_days), y = delta_days, fill = phenology_variable)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_errorbar(aes(ymin = delta_days - 2*se_days, ymax = delta_days + 2*se_days), 
+                width = 0.3, position = position_dodge(width = 0.9)) +
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+  coord_flip() +
+  labs(title = "Predicted Delta in Onset, Offset, and Duration by Species",
+       subtitle = "Shows how GHMI shifts each phenology metric, with uncertainty",
+       x = "Species",
+       y = "Predicted change (days)",
+       fill = "Phenology Variable") +
+  scale_fill_manual(values = c("Onset" = "orange", "Offset" = "purple", "Duration" = "steelblue")) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold"),
+        plot.subtitle = element_text(size = 10))
+
+
+
+
+
+
+
+
+### Moving on to spatial smooths 
 
 # Plotting spatial smooths to look at whether there is spatial significance for each of the 16 species:
 
