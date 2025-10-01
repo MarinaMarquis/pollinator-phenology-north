@@ -1130,27 +1130,27 @@ slopes_df <- phenology_estimates_all_species_each_grid_with_landsat %>%
     }
   })
 
-
-# Explicitly set factor levels of species in slope order
-species_order <- unique(as.character(slopes_df$species))
-slopes_df$species <- factor(slopes_df$species, levels = species_order)
-
-# Give id numbers to the species so the plot doesn't look crowded 
+# Reorder species by slope
 slopes_df <- slopes_df %>%
-  mutate(species_id = as.numeric(factor(species))) 
+  arrange(slope) %>%   # sort by slope
+  mutate(species = factor(species, levels = unique(species)),
+         species_id = row_number())  # numeric ID in slope order
 
-# Plot with numbers on the y-axis
+#Plot it 
 ggplot(slopes_df, aes(x = slope, y = species_id)) +
   geom_point() +
   geom_errorbarh(aes(xmin = slope - se, xmax = slope + se), height = 0.2) +
   geom_vline(xintercept = 0, color = "red") +
   theme_minimal() +
   labs(
-    x = "Slope of Duration vs GHMI",
-    y = "Species ID",
+    x = "Slope of Total Duration vs GHMI",
+    y = "Species (ranked by slope)",
     title = "Total Duration of Flight Period Across a Range of GHMI Values for All Species"
   ) +
-  theme(axis.text.y = element_text(size = 6))
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"))
 
 #Save it 
 ggsave("Figures/slope_of_species_duration_plot.png", width=6, height=6, units="in", bg = "transparent")
@@ -1180,16 +1180,13 @@ slopes_df <- phenology_estimates_all_species_each_grid_with_landsat %>%
     }
   })
 
-
-# Explicitly set factor levels of species in slope order
-species_order <- unique(as.character(slopes_df$species))
-slopes_df$species <- factor(slopes_df$species, levels = species_order)
-
-# Give id numbers to the species so the plot doesn't look crowded 
+# Reorder species by slope
 slopes_df <- slopes_df %>%
-  mutate(species_id = as.numeric(factor(species))) 
+  arrange(slope) %>%   # sort by slope
+  mutate(species = factor(species, levels = unique(species)),
+         species_id = row_number())  # numeric ID in slope order
 
-# Plot with numbers on the y-axis
+#Plot it 
 ggplot(slopes_df, aes(x = slope, y = species_id)) +
   geom_point() +
   geom_errorbarh(aes(xmin = slope - se, xmax = slope + se), height = 0.2) +
@@ -1197,10 +1194,14 @@ ggplot(slopes_df, aes(x = slope, y = species_id)) +
   theme_minimal() +
   labs(
     x = "Slope of Onset vs GHMI",
-    y = "Species ID",
+    y = "Species (ranked by slope)",
     title = "Onset of Flight Period Across a Range of GHMI Values for All Species"
   ) +
-  theme(axis.text.y = element_text(size = 6))
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"))
+
 
 #Save it 
 ggsave("Figures/slope_of_species_onset_plot.png", width=6, height=6, units="in", bg = "transparent")
@@ -1230,16 +1231,13 @@ slopes_df <- phenology_estimates_all_species_each_grid_with_landsat %>%
   })
 
 
-# Explicitly set factor levels of species in slope order
-species_order <- unique(as.character(slopes_df$species))
-slopes_df$species <- factor(slopes_df$species, levels = species_order)
-
-
-# Give id numbers to the species so the plot doesn't look crowded 
+# Reorder species by slope
 slopes_df <- slopes_df %>%
-  mutate(species_id = as.numeric(factor(species))) 
+  arrange(slope) %>%   # sort by slope
+  mutate(species = factor(species, levels = unique(species)),
+         species_id = row_number())  # numeric ID in slope order
 
-# Plot with numbers on the y-axis
+#Plot it 
 ggplot(slopes_df, aes(x = slope, y = species_id)) +
   geom_point() +
   geom_errorbarh(aes(xmin = slope - se, xmax = slope + se), height = 0.2) +
@@ -1247,10 +1245,14 @@ ggplot(slopes_df, aes(x = slope, y = species_id)) +
   theme_minimal() +
   labs(
     x = "Slope of Offset vs GHMI",
-    y = "Species ID",
+    y = "Species (ranked by slope)",
     title = "Offset of Flight Period Across a Range of GHMI Values for All Species"
   ) +
-  theme(axis.text.y = element_text(size = 6))
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"))
+
 
 #Save it 
 ggsave("Figures/slope_of_species_offset_plot.png", width=6, height=6, units="in", bg = "transparent")
@@ -1308,7 +1310,7 @@ eight_species$species_label <- italic_species_labels[eight_species$species]
 
 # Calculate mean total duration and SE per GHMI value
 plot_data <- eight_species %>%
-  group_by(species, mean_GHMI) %>%
+  group_by(species, species_label, mean_GHMI) %>%
   summarise(
     mean_duration = mean(duration, na.rm = TRUE),
     se_duration = sd(duration, na.rm = TRUE) / sqrt(n()),

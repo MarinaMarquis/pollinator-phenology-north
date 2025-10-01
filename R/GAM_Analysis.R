@@ -143,6 +143,11 @@ unique(fp_data$species) #99 species
 unique(fp_data$family) #23 families  
 unique(fp_data$order) #4 orders 
 unique(fp_data$grid) #281
+species_per_order <- fp_data %>%
+  group_by(order) %>%
+  summarise(n_species = n_distinct(species)) %>%
+  arrange(desc(n_species))%>%
+  print()
 
 # Export to CSV for easy sharing/use in Excel
 write.csv(data_for_models_summary, "Data/data_for_models_summary.csv")
@@ -191,6 +196,8 @@ Bombus_impatiens <- fp_data %>%
 # Let's also do a species that has less data like Halictus ligatus
 Halictus_ligatus <- fp_data %>% 
   filter(species == "Halictus ligatus")
+
+
 
 ## Duration -------------------------------------------------------
 
@@ -673,10 +680,27 @@ species_gam_significant_p_only <- species_gam %>%
 write_csv(species_gam_significant_p_only, "Data/GAM_results/species_gam_significant_p_only.csv")
 
 
+# Look at sample sizes to compare sample size of sig species versus non-sig species 
+species_gam <- species_gam %>%
+  mutate(sig_flag = ifelse(GHMI_pval < 0.05, "significant", "not_significant"))
+sample_size_summary <- species_gam %>%
+  group_by(model, sig_flag) %>%
+  summarise(
+    mean_n = mean(sample_size, na.rm = TRUE),
+    median_n = median(sample_size, na.rm = TRUE),
+    min_n = min(sample_size, na.rm = TRUE),
+    max_n = max(sample_size, na.rm = TRUE),
+    n_species = n(),
+    .groups = "drop"
+  )%>%
+  print()
 
-
-
-
+# Look at orders represented in the data set 
+species_per_order_gam_sig <- species_gam %>%
+  group_by(order) %>%
+  summarise(n_species = n_distinct(species)) %>%
+  arrange(desc(n_species))%>%
+  print()
 
 ########################################################################################################### 
 ############################## Interpreting Model Outputs: 
@@ -1058,23 +1082,50 @@ calc_delta_duration <- function(sp) {
   onset_mod <- species_gam_full[[sp]]$models$onset
   offset_mod <- species_gam_full[[sp]]$models$offset
   
-  # get predicted onset/offset at low and high GHMI
+  # Prediction data (low GHMI = 0, high GHMI = 1)
   pred_data <- tibble(
     mean_GHMI = c(0, 1),
-    lat = mean(onset_mod$model$lat),
-    lon = mean(onset_mod$model$lon)
+    lat = mean(onset_mod$model$lat, na.rm = TRUE),
+    lon = mean(onset_mod$model$lon, na.rm = TRUE)
   )
   
-  pred_onset <- predict(onset_mod, newdata = pred_data)
-  pred_offset <- predict(offset_mod, newdata = pred_data)
+  # Get predictions with SEs
+  pred_onset  <- predict(onset_mod,  newdata = pred_data, se.fit = TRUE)
+  pred_offset <- predict(offset_mod, newdata = pred_data, se.fit = TRUE)
   
-  delta <- (pred_offset[2] - pred_onset[2]) - (pred_offset[1] - pred_onset[1])
+  # Extract fits and SEs
+  onset_low  <- pred_onset$fit[1];  onset_high  <- pred_onset$fit[2]
+  offset_low <- pred_offset$fit[1]; offset_high <- pred_offset$fit[2]
+  
+  se_onset_low  <- pred_onset$se.fit[1];  se_onset_high  <- pred_onset$se.fit[2]
+  se_offset_low <- pred_offset$se.fit[1]; se_offset_high <- pred_offset$se.fit[2]
+  
+  # Durations at low and high GHMI
+  duration_low  <- offset_low  - onset_low
+  duration_high <- offset_high - onset_high
+  
+  # Propagate SE for durations (Var(A−B) = Var(A)+Var(B))
+  se_duration_low  <- sqrt(se_offset_low^2  + se_onset_low^2)
+  se_duration_high <- sqrt(se_offset_high^2 + se_onset_high^2)
+  
+  # Delta values
+  delta_onset    <- onset_high  - onset_low
+  delta_offset   <- offset_high - offset_low
+  delta_duration <- duration_high - duration_low
+  
+  # SE for deltas (difference of two values → add variances)
+  se_delta_onset    <- sqrt(se_onset_low^2  + se_onset_high^2)
+  se_delta_offset   <- sqrt(se_offset_low^2 + se_offset_high^2)
+  se_delta_duration <- sqrt(se_duration_low^2 + se_duration_high^2)
   
   tibble(
     species = sp,
-    delta_duration = delta,
-    duration_low = pred_offset[1] - pred_onset[1],
-    duration_high = pred_offset[2] - pred_onset[2]
+    delta_onset = delta_onset,
+    delta_offset = delta_offset,
+    delta_duration = delta_duration,
+    se_onset = se_delta_onset,
+    se_offset = se_delta_offset,
+    se_duration = se_delta_duration
   )
 }
 
@@ -1087,59 +1138,44 @@ delta_weird
 #offset shifts significantly.
 
 
-# Make sure delta_on_off exists (replace these example values with your actual onset/offset deltas)
-delta_on_off <- delta_weird %>%
-  dplyr::mutate(
-    delta_onset = c(-29.9, 93.6, -177, 121, 28.3, 21.2, 23.0, 27.2, 33.0, -44.7, 61.8, -30.6, 77.3),  # replace with actual
-    delta_offset = c(250-280, 346-253, 241-417, 337-216, 292-263, 256-234, 285-262, 247-220, 284-251, 265-309, 289-228, 187-217, 277-200) # replace with actual
-  )
 
 # Combine delta_weird with onset/offset deltas
 delta_combined <- delta_weird %>%
-  dplyr::left_join(
-    delta_on_off %>% dplyr::select(species, delta_onset, delta_offset),
-    by = "species"
-  ) %>%
-  tidyr::pivot_longer(
-    cols = c(delta_duration, delta_onset, delta_offset),
+  pivot_longer(
+    cols = c(delta_onset, delta_offset, delta_duration),
     names_to = "phenology_variable",
     values_to = "delta_days"
   ) %>%
-  dplyr::mutate(
+  mutate(
     phenology_variable = recode(
       phenology_variable,
-      delta_duration = "Duration",
       delta_onset = "Onset",
-      delta_offset = "Offset"
+      delta_offset = "Offset",
+      delta_duration = "Duration"
+    ),
+    se_days = case_when(
+      phenology_variable == "Onset"    ~ se_onset,
+      phenology_variable == "Offset"   ~ se_offset,
+      phenology_variable == "Duration" ~ se_duration
     )
   )
-#Add SE bars. Each SE bar shows the predicted delta, and the uncertainty (±2 SE) for onset, offset, 
-#and duration. This shows that the predicted duration (net change in duration) might be small (close to
-#zero)
-delta_combined <- delta_combined %>%
-  mutate(se_days = case_when(
-    phenology_variable == "Duration" ~ 50,  # replace with actual SE
-    phenology_variable == "Onset"    ~ 30,
-    phenology_variable == "Offset"   ~ 30
-  ))
-
 
 # Plot it
-ggplot(delta_combined, aes(x = reorder(species, delta_days), y = delta_days, fill = phenology_variable)) +
+ggplot(delta_combined, aes(x = reorder(species, delta_days), 
+                           y = delta_days, fill = phenology_variable)) +
   geom_bar(stat = "identity", position = "dodge") +
-  geom_errorbar(aes(ymin = delta_days - 2*se_days, ymax = delta_days + 2*se_days), 
+  geom_errorbar(aes(ymin = delta_days - 2*se_days, 
+                    ymax = delta_days + 2*se_days), 
                 width = 0.3, position = position_dodge(width = 0.9)) +
   geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
   coord_flip() +
   labs(title = "Predicted Delta in Onset, Offset, and Duration by Species",
-       subtitle = "Shows how GHMI shifts each phenology metric, with uncertainty",
+       subtitle = "With ±2 SE uncertainty from GAM predictions",
        x = "Species",
        y = "Predicted change (days)",
        fill = "Phenology Variable") +
-  scale_fill_manual(values = c("Onset" = "orange", "Offset" = "purple", "Duration" = "steelblue")) +
-  theme_minimal(base_size = 12) +
-  theme(plot.title = element_text(face = "bold"),
-        plot.subtitle = element_text(size = 10))
+  theme_minimal(base_size = 12)
+
 
 
 
@@ -1206,3 +1242,11 @@ plot_spatial_model_group(sig_spatial_duration, ncol = 2)
 #spatial variation.
 
 
+
+### Examining cases of very large estimates (more than 365 days of year): Vespula squamosa(onset 
+#   estimate) and Clogmia albipunctatus (duration and onset estimates)
+print(results, n=107)
+#Vespula squamosa: n (# of obs) = 10, range of GHMI values = 0.394, sd of GHMI values = 0.132
+#Clogmia albipunctatus: n (# of obs) = 9, range of GHMI values = 0.375, sd of GHMI values = 0.132
+
+# Looks like the inflated estimates are due to narrow range of GHMI values and small sample size
