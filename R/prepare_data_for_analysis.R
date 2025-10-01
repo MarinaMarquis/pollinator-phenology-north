@@ -263,7 +263,11 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
          species != "Sphecius speciosus", 
          species != "Epipaschia superatalis", 
          species != "Euclea delphinii", 
-         species != "Phalaenostola larentioides"
+         species != "Phalaenostola larentioides", 
+         species != "Arogalea cristifasciella", 
+         species != "Hypsopygia costalis", 
+         species != "Pasiphila rectangulata", 
+         species != "Megachile xylocopoides"
   )
 unique(phenology_estimates_all_species_each_grid_with_GHMI$species) #double check new species list
 
@@ -648,8 +652,8 @@ phenology_filtered <- phenology_estimates_all_species_each_grid_with_GHMI %>%
   filter(!(offset > 365 | duration > 365))
 
 #Look at new species and grids  
-unique(phenology_filtered$species) #111 species 
-unique(phenology_filtered$family) #27 families  
+unique(phenology_filtered$species) #107 species 
+unique(phenology_filtered$family) #24 families  
 unique(phenology_filtered$order) #4 orders 
 unique(phenology_filtered$grid) #282
 

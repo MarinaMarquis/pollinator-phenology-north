@@ -665,3 +665,17 @@ ggplot(Apis_mellifera) +
 ggsave("Figures/Apis_mellifera_observations_across_grids.png", width = 6, height = 6, units = "in", bg = "transparent")
 
 
+
+
+
+############################################## Figure 19: quick histogram of the available GHMI values
+#                                              available in Bioregion NA24
+
+# Quick visualization 
+ggplot(GHMI, aes(x = mean)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  theme_classic() +
+  labs(x = "GHMI", y = "Count",
+       title = "Distribution of GHMI in Bioregion NA24")
+# Save it 
+ggsave("Figures/distribution_of_GHMI_values_in_Bioregion_NA24.png", width=6, height=6, units="in")

@@ -75,6 +75,9 @@ grid_adj_NA24_wgs <- st_transform(grid_adj_NA24, 4326)
 plot(st_geometry(grid_adj_NA24))        # Projected view
 plot(st_geometry(grid_adj_NA24_wgs))    # Reprojected WGS84 view
 
+# Number of  grid cells in this map: 24128
+nrow(grid_adj_NA24_wgs)
+
 # Export to GeoJSON for use in GBIF or elsewhere
 st_write(grid_adj_NA24_wgs, "Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson", delete_dsn = TRUE)
 

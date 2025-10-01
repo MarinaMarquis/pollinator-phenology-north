@@ -92,18 +92,17 @@ check_species <- function(df) {
     n = nrow(df),
     range = diff(range(df$mean_GHMI)),
     sd = sd(df$mean_GHMI),
-    edf = summary(m)$edf[1]
+    edf = summary(m)$edf[1]  
   )
 }
-
 results <- fp_data %>% group_by(species) %>% group_modify(~check_species(.x))
-print(results, n=111)
+print(results, n=107)
 
 
-# Removing species with a range less than 0.25 and a standard deviation less than 0.10 so that they
+# Removing species with a range less than 0.3 and a standard deviation less than 0.10 so that they
 # can be properly fitted to GAMs
 flagged_species <- results %>%
-  filter(range < 0.25 & sd < 0.1)
+  filter(range < 0.3 | sd < 0.1)
 fp_data <- fp_data %>%
   filter(!species %in% flagged_species$species)
 
@@ -114,8 +113,41 @@ sd(fp_data$mean_GHMI)
 ggplot(fp_data, aes(x = mean_GHMI)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   theme_classic() +
-  labs(x = "Mean GHMI", y = "Count",
-       title = "Distribution of GHMI in the data set after filtering")
+  labs(x = "GHMI", y = "Count",
+       title = "Distribution of GHMI in the Data Set After Filtering")
+
+# Save it 
+ggsave("Figures/distribution_of_GHMI_values_in_GAM_dataset.png", width=6, height=6, units="in")
+
+# Produce a table summarizing the species being used in the GAMs, the number of grid cells that 
+# each species has, the number of observations for each species, and the range of GHMI values 
+# across all grid cells for each species 
+data_for_models_summary <- fp_data %>%
+  group_by(species) %>%
+  summarise(
+    n_grid_cells = n_distinct(grid),
+    n_observations = n(),
+    min_GHMI = min(mean_GHMI, na.rm = TRUE),
+    max_GHMI = max(mean_GHMI, na.rm = TRUE),
+    GHMI_range = max_GHMI - min_GHMI,
+    .groups = "drop"
+  ) %>%
+  arrange(desc(n_observations))%>%
+  mutate(across(c(min_GHMI, max_GHMI, GHMI_range), ~round(.x, 3))) %>%
+  arrange(desc(n_observations))%>%
+  print()
+
+# Look at the make-up of our data after this final level of filtering: 
+#Look at new species and grids  
+unique(fp_data$species) #99 species 
+unique(fp_data$family) #23 families  
+unique(fp_data$order) #4 orders 
+unique(fp_data$grid) #281
+
+# Export to CSV for easy sharing/use in Excel
+write.csv(data_for_models_summary, "Data/data_for_models_summary.csv")
+
+
 
 ########################################################################################################### 
 
@@ -165,6 +197,19 @@ Halictus_ligatus <- fp_data %>%
 # Let's do some model testing to see which model will best fit the data
 # we will start with modeling species as a random effect
 
+# Comparing gaussian and gamma models to see which is a better fit
+mod_gauss_duration <- gam(duration ~ s(mean_GHMI) + s(lat, lon) + s(species, bs="re"),
+                          family = gaussian(),
+                          method = "REML",
+                          data = fp_data)
+mod_gamma_duration <- gam(duration ~ s(mean_GHMI) + s(lat, lon) + s(species, bs="re"),
+                          family = Gamma(link = "log"),
+                          method = "REML",
+                          data = fp_data)
+AIC(mod_gauss_duration, mod_gamma_duration) #gaussian has lower AIC
+gam.check(mod_gauss_duration)
+#Gaussian model is a better fit. We'll use this for duration models 
+
 # Start with a null model
 gam_null <- gam(duration ~ 1 + s(lat, lon, k = 170, bs="tp") + s(species, bs="re"), 
                 family = gaussian(),
@@ -181,7 +226,7 @@ gam_1 <- gam(duration ~ mean_GHMI +
              family = gaussian(),
              method = "REML",
              data=fp_data)
-summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0486), as is species (<2e-16) and lat/long(<2e-16)
+summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0489), as is species (<2e-16) and lat/long(<2e-16)
 gam.check(gam_1)
 gam.check(gam_1)$k.check
 #The mean GHMI seems to explain very little deviance in the model, species and lat/long explain much 
@@ -191,10 +236,10 @@ gam.check(gam_1)$k.check
 # Now let's see how they rank
 AIC(gam_null)
 AIC(gam_1)
-# So in this case the null model performed worse but not by much, so adding GHMI does not help explain duration
+# So in this case the null model performed better but not by much, so adding GHMI does not help explain duration
 
 #Getting model weight 
-aic_val <- c(31611.94, 31610.20)
+aic_val <- c(30512.68, 30510.82)
 delta_aic <- aic_val - min(aic_val)
 weights <- exp(-0.5 * delta_aic) / sum(exp(-0.5 * delta_aic))
 weights #(null, duration model)
@@ -268,21 +313,33 @@ hist(fp_data$onset)
 
 # Start with modeling species as a random effect
 
+# Comparing gaussian and gamma models to see which is a better fit
+mod_gauss_onset <- gam(onset ~ s(mean_GHMI) + s(lat, lon) + s(species, bs="re"),
+                       family = gaussian(),
+                       method = "REML",
+                       data = fp_data)
+mod_gamma_onset <- gam(onset ~ s(mean_GHMI) + s(lat, lon) + s(species, bs="re"),
+                       family = Gamma(link = "log"),
+                       method = "REML",
+                       data = fp_data)
+AIC(mod_gauss_onset, mod_gamma_onset) #gaussian has lower AIC
+gam.check(mod_gauss_onset)
+#Gaussian model is a better fit. We'll use this for onset models 
+
 # Start with a null model
 gam_null_on <- gam(onset ~ 1 + s(lat, lon, k = 170, bs="tp") + s(species, bs="re"), 
-                   family = Gamma(link = "log"),
+                   family = gaussian(),
                    method = "REML",
                    data=fp_data)
 summary(gam_null_on)
 gam.check(gam_null_on)
-# I tried gaussian family at first, but the Gamma(link="log") has slightly better
-# model fit so we will stick with that
+
 
 # Now add mean_GHMI
 gam_1_on <- gam(onset ~ mean_GHMI +
                   s(lat, lon, k = 170, bs="tp") + 
                   s(species, bs="re"), 
-                family = Gamma(link = "log"),
+                family = gaussian(),
                 method = "REML",
                 data=fp_data)
 summary(gam_1_on)
@@ -292,17 +349,18 @@ gam.check(gam_1_on)
 # Now let's see how they rank
 AIC(gam_null_on)
 AIC(gam_1_on)
-#In this case, adding GHMI does not better the fit of the model 
+#In this case, adding GHMI increases model fit but not enough to be significant 
 
 #Getting model weight 
-aic_val_on <- c(31526.88, 31528.02)
+aic_val_on <- c(29708.91, 29707.84)
 delta_aic_on <- aic_val_on - min(aic_val_on)
 weights_on <- exp(-0.5 * delta_aic_on) / sum(exp(-0.5 * delta_aic_on))
 weights_on #(null, duration model)
 
+
 # Let's repeat for an individual species
 gam_null_bi_on <- gam(onset ~ 1 + s(lat, lon, k = 10, bs="tp"), 
-                      family = Gamma(link = "log"),
+                      family = gaussian(),
                       method = "REML",
                       data=Bombus_impatiens)
 summary(gam_null_bi_on)
@@ -312,7 +370,7 @@ gam.check(gam_null_bi_on)
 # Now add mean_GHMI
 gam_1_bi_on <- gam(onset ~ mean_GHMI +
                      s(lat, lon, bs="tp"), 
-                   family = Gamma(link = "log"),
+                   family = gaussian(),
                    method = "REML",
                    data=Bombus_impatiens)
 summary(gam_1_bi_on) #GHMI not a sig. predictor of onset 
@@ -326,7 +384,7 @@ AICc(gam_1_bi_on)
 
 # Let's try one more time for the species with little data
 gam_null_hl_on <- gam(onset ~ 1 + s(lat, lon, k=5, bs="tp"), 
-                      family = Gamma(link = "log"),,
+                      family = gaussian(),
                       method = "REML",
                       data=Halictus_ligatus)
 summary(gam_null_hl_on)
@@ -336,7 +394,7 @@ gam.check(gam_null_hl_on)
 # Now add mean_GHMI
 gam_1_hl_on <- gam(onset ~ mean_GHMI +
                      s(lat, lon, k=5, bs="tp"), 
-                   family = Gamma(link = "log"),,
+                   family = gaussian(),
                    method = "REML",
                    data=Halictus_ligatus)
 summary(gam_1_hl_on) #GHMI not a sig. predictor of onset 
@@ -361,6 +419,19 @@ AICc(gam_1_hl_on)
 hist(fp_data$offset)
 #It looks normal, so guassian is probably going to be the best distribution
 
+# Comparing gaussian and gamma models to see which is a better fit, to make sure
+mod_gauss_offset <- gam(offset ~ s(mean_GHMI) + s(lat, lon) + s(species, bs="re"),
+                       family = gaussian(),
+                       method = "REML",
+                       data = fp_data)
+mod_gamma_offset <- gam(offset ~ s(mean_GHMI) + s(lat, lon) + s(species, bs="re"),
+                       family = Gamma(link = "log"),
+                       method = "REML",
+                       data = fp_data)
+AIC(mod_gauss_offset, mod_gamma_offset) #gaussian has lower AIC
+gam.check(mod_gauss_offset)
+#Gaussian model is a better fit. We'll use this for offset models 
+
 # Start with modeling species as a random effect
 
 # Start with a null model
@@ -379,7 +450,7 @@ gam_1_off <- gam(offset ~ mean_GHMI +
                  family = gaussian(),
                  method = "REML",
                  data=fp_data)
-summary(gam_1_off) #GHMI is a sig. predictor of offset (p=9.25e-09)
+summary(gam_1_off) #GHMI is a sig. predictor of offset (p=8.09e-09)
 gam.check(gam_1_off) #not much difference in deviance explained between this model and the null 
 
 # Now let's see how they rank
@@ -388,7 +459,7 @@ AIC(gam_1_off)
 #Adding GHMI improves model fit 
 
 #Getting model weight 
-aic_val_off <- c(29084.17, 29076.45)
+aic_val_off <- c(28031.33, 28020.6)
 delta_aic_off <- aic_val_off - min(aic_val_off)
 weights_off <- exp(-0.5 * delta_aic_off) / sum(exp(-0.5 * delta_aic_off))
 weights_off #(null, duration model)
@@ -438,7 +509,7 @@ gam.check(gam_1_hl_off)
 # Now let's see how they rank
 AICc(gam_null_hl_off)
 AICc(gam_1_hl_off)
-#The null model does better in this case 
+#The ghmi model does better but these results are odd. Model is probably overfitted. 
 
 
 
@@ -488,14 +559,14 @@ gam_by_species <- function(species_name){
   
   ### onset ###
   gam_null_on <- gam(onset ~ 1 + s(lat, lon, k = k_val, bs="tp"), 
-                     family = Gamma(link = "log"),
+                     family = gaussian(),
                      method = "REML",
                      data=fp_data_sp)
   sum_gam_null_on <- summary(gam_null_on)
   
   
   gam_ghmi_on <- gam(onset ~ mean_GHMI + s(lat, lon, k = k_val, bs="tp"), 
-                     family = Gamma(link = "log"),
+                     family = gaussian(),
                      method = "REML",
                      data=fp_data_sp)
   sum_gam_ghmi_on <- summary(gam_ghmi_on)
@@ -615,9 +686,9 @@ species_gam_significant <- species_gam %>%
          model_weight_comp_null > 0.75,
          adj_r2 > 0)
 unique(species_gam_significant$species) #20 species sig. 
-unique(species_gam_significant$species[species_gam_significant$model=="onset"]) #7 sig. for onset 
+unique(species_gam_significant$species[species_gam_significant$model=="onset"]) #8 sig. for onset 
 unique(species_gam_significant$species[species_gam_significant$model=="offset"]) #11 sig. for offset
-unique(species_gam_significant$species[species_gam_significant$model=="duration"]) #7 sig. for duration 
+unique(species_gam_significant$species[species_gam_significant$model=="duration"]) #6 sig. for duration 
 
 
 # =  species only onset 
@@ -823,8 +894,7 @@ print(direction_counts)
 
 
 
-### Looking at model fit using adj R^2 and dev_exp. Since offset and duration are Gaussian, we'll use 
-#adj R squared in addition to dev_exp, as a second check
+### Looking at model fit using adj R^2, adj R squared, and dev_exp
 
 species_gam_significant %>%
   group_by(model) %>%
@@ -837,7 +907,7 @@ species_gam_significant %>%
     mean_dev = mean(dev_exp, na.rm = TRUE)
   )
 
-#Onset models, on average, have slightly better R² and deviance explained than onset or duration.
+#Onset models, on average, have slightly better R² and deviance explained than offset or duration.
 #However, these models still have a large range of deviance explained (lots of variation). 
 
 
@@ -863,18 +933,16 @@ print(sig_spatial_summary)
 
 
 # Separate species into what phenology variable GHMI sig. predicts, based on GAM models: 
-onset_species <- c("Xylocopa virginica", "Papilio troilus", "Eremnophila aureonotata",
-                   "Eristalis tenax", "Vespula squamosa", "Clogmia albipunctatus",   
-                   "Helicoverpa zea")
+onset_species <- c("Xylocopa virginica", "Bombus griseocollis", "Papilio troilus", 
+                   "Eremnophila aureonotata", "Eristalis tenax", "Vespula squamosa", 
+                   "Clogmia albipunctatus", "Helicoverpa zea")
 
 offset_species <- c("Bombus impatiens", "Papilio glaucus", "Danaus plexippus", "Epargyreus clarus",
-                    "Phyciodes tharos", "Hylephila phyleus",        
-                    "Pyrrharctia isabella", "Battus philenor", "Tetraopes tetrophthalmus",
-                    "Noctua pronuba", "Limenitis arthemis")
+                    "Phyciodes tharos", "Hylephila phyleus", "Pyrrharctia isabella", "Battus philenor", 
+                    "Tetraopes tetrophthalmus","Noctua pronuba", "Limenitis arthemis")
 
 duration_species <- c("Xylocopa virginica", "Apis mellifera", "Pyrrharctia isabella", 
-                      "Papilio troilus", "Hypoprepia fucosa", "Noctua pronuba", 
-                      "Clogmia albipunctatus")
+                      "Papilio troilus", "Noctua pronuba", "Clogmia albipunctatus")
 
 
 

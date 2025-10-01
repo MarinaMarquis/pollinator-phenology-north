@@ -33,3 +33,4 @@ merged_df <- merge(filtered_grids_with_observations, GHMI[, c("grid_id", "mean")
 # Export
 write.csv(merged_df, "Data/filtered_5_with_GHMI.csv")
 
+
