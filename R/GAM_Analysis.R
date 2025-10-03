@@ -20,6 +20,8 @@ fp_data <- readRDS("Data/phenology_estimates_data_for_analysis.rds") #phenology 
 five_km_grids <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #geoJSON of 
                                                                                                   #eco-region
                                                                                              #NA24
+filtered_5 <- readRDS("Data/filtered_5.rds") # joined grid and pollinators data, reading this in 
+#so we can see how many observations we used for analysis after all of the filtering 
 
 ########################################################################################################### 
 
@@ -137,7 +139,10 @@ data_for_models_summary <- fp_data %>%
   arrange(desc(n_observations))%>%
   print()
 
-# Look at the make-up of our data after this final level of filtering: 
+# Export to CSV for easy sharing/use in Excel
+write.csv(data_for_models_summary, "Data/data_for_models_summary.csv")
+
+### Look at the make-up of our data after this final level of filtering: 
 #Look at new species and grids  
 unique(fp_data$species) #99 species 
 unique(fp_data$family) #23 families  
@@ -149,10 +154,24 @@ species_per_order <- fp_data %>%
   arrange(desc(n_species))%>%
   print()
 
-# Export to CSV for easy sharing/use in Excel
-write.csv(data_for_models_summary, "Data/data_for_models_summary.csv")
 
+# Also want to know how many pollinator observations we ended up using in this study
+obs_used <- filtered_5 %>%  #filter raw observation data to only include grid/species combos used in fp_data
+  semi_join(fp_data, by = c("species" = "species", "grid_id" = "grid"))
 
+n_obs_used <- nrow(obs_used) # Total # of obs used to produce phenology estimates that we actually
+#used for the GAMs
+n_obs_used
+
+# Per species
+obs_used_per_species <- obs_used %>%
+  count(species, name = "n_obs")%>%
+  print()
+
+# Per species × grid cell
+obs_used_per_sp_grid <- obs_used %>%
+  count(species, grid_id, name = "n_obs")%>%
+  print()
 
 ########################################################################################################### 
 
@@ -534,114 +553,92 @@ AICc(gam_1_hl_off)
 
 gam_by_species <- function(species_name){
   
-  # select the species
-  species_interest <- species_name
-  
   # filter the fp_data to that species
   fp_data_sp <- fp_data %>%
-    filter(species == species_interest)
+    filter(species == species_name)
   
-  # define the k value based on the number of data points we have
+  # pull taxonomic info (assumes order, family, genus are consistent per species)
+  tax_info <- fp_data_sp %>%
+    distinct(order, family, genus, species) %>%
+    slice(1)
+  
+  # define k value
   k_val <- ifelse(nrow(fp_data_sp) <= 20, nrow(fp_data_sp)-1, 20)
   
   ### duration ###
   gam_null_dur <- gam(duration ~ 1 + s(lat, lon, k = k_val, bs="tp"), 
-                      family = gaussian(),
-                      method = "REML",
-                      data=fp_data_sp)
-  sum_gam_null_dur <- summary(gam_null_dur)
-  
+                      family = gaussian(), method = "REML", data=fp_data_sp)
   gam_ghmi_dur <- gam(duration ~ mean_GHMI + s(lat, lon, k = k_val, bs="tp"), 
-                      family = gaussian(),
-                      method = "REML",
-                      data=fp_data_sp)
+                      family = gaussian(), method = "REML", data=fp_data_sp)
+  sum_gam_null_dur <- summary(gam_null_dur)
   sum_gam_ghmi_dur <- summary(gam_ghmi_dur)
-  pval_spatial_dur <- sum_gam_ghmi_dur$s.table["s(lat,lon)", "p-value"] # spatial smooth significance 
+  pval_spatial_dur <- sum_gam_ghmi_dur$s.table["s(lat,lon)", "p-value"]
   
-  # get model weights
   aic_val_dur <- c(AICc(gam_null_dur), AICc(gam_ghmi_dur))
   delta_aic_dur <- aic_val_dur - min(aic_val_dur)
   weights_dur <- exp(-0.5 * delta_aic_dur) / sum(exp(-0.5 * delta_aic_dur))
   
-  
   ### onset ###
   gam_null_on <- gam(onset ~ 1 + s(lat, lon, k = k_val, bs="tp"), 
-                     family = gaussian(),
-                     method = "REML",
-                     data=fp_data_sp)
-  sum_gam_null_on <- summary(gam_null_on)
-  
-  
+                     family = gaussian(), method = "REML", data=fp_data_sp)
   gam_ghmi_on <- gam(onset ~ mean_GHMI + s(lat, lon, k = k_val, bs="tp"), 
-                     family = gaussian(),
-                     method = "REML",
-                     data=fp_data_sp)
+                     family = gaussian(), method = "REML", data=fp_data_sp)
+  sum_gam_null_on <- summary(gam_null_on)
   sum_gam_ghmi_on <- summary(gam_ghmi_on)
-  pval_spatial_on <- sum_gam_ghmi_on$s.table["s(lat,lon)", "p-value"] #spatial smooth significance 
+  pval_spatial_on <- sum_gam_ghmi_on$s.table["s(lat,lon)", "p-value"]
   
-  # get model weights
   aic_val_on <- c(AICc(gam_null_on), AICc(gam_ghmi_on))
   delta_aic_on <- aic_val_on - min(aic_val_on)
   weights_on <- exp(-0.5 * delta_aic_on) / sum(exp(-0.5 * delta_aic_on))
   
   ### offset ###
   gam_null_off <- gam(offset ~ 1 + s(lat, lon, k = k_val, bs="tp"), 
-                      family = gaussian(),
-                      method = "REML",
-                      data=fp_data_sp)
-  sum_gam_null_off <- summary(gam_null_off)
-  
+                      family = gaussian(), method = "REML", data=fp_data_sp)
   gam_ghmi_off <- gam(offset ~ mean_GHMI + s(lat, lon, k = k_val, bs="tp"), 
-                      family = gaussian(),
-                      method = "REML",
-                      data=fp_data_sp)
+                      family = gaussian(), method = "REML", data=fp_data_sp)
+  sum_gam_null_off <- summary(gam_null_off)
   sum_gam_ghmi_off <- summary(gam_ghmi_off)
-  pval_spatial_off <- sum_gam_ghmi_off$s.table["s(lat,lon)", "p-value"] #spatial smooth significance 
+  pval_spatial_off <- sum_gam_ghmi_off$s.table["s(lat,lon)", "p-value"]
   
-  # get model weights
   aic_val_off <- c(AICc(gam_null_off), AICc(gam_ghmi_off))
   delta_aic_off <- aic_val_off - min(aic_val_off)
   weights_off <- exp(-0.5 * delta_aic_off) / sum(exp(-0.5 * delta_aic_off))
   
-  # now create a table with outputs for the three response variables
-  gam_table <- data.frame(species = c(species_interest, species_interest, species_interest),
-                          model=c("duration", "onset", "offset"),
-                          # linear coefficient estimate for GHMI
-                          GHMI_estimate = c(sum_gam_ghmi_dur$p.table["mean_GHMI", "Estimate"],
-                                            sum_gam_ghmi_on$p.table["mean_GHMI", "Estimate"],
-                                            sum_gam_ghmi_off$p.table["mean_GHMI", "Estimate"]),
-                          # standard error for GHMI
-                          GHMI_se = c(sum_gam_ghmi_dur$p.table["mean_GHMI", "Std. Error"],
-                                      sum_gam_ghmi_on$p.table["mean_GHMI", "Std. Error"],
-                                      sum_gam_ghmi_off$p.table["mean_GHMI", "Std. Error"]),
-                          # t value for GHMI
-                          GHMI_tval = c(sum_gam_ghmi_dur$p.table["mean_GHMI", "t value"],
-                                        sum_gam_ghmi_on$p.table["mean_GHMI", "t value"],
-                                        sum_gam_ghmi_off$p.table["mean_GHMI", "t value"]),
-                          # p-value for GHMI
-                          GHMI_pval = c(sum_gam_ghmi_dur$p.table["mean_GHMI", "Pr(>|t|)"],
-                                        sum_gam_ghmi_on$p.table["mean_GHMI", "Pr(>|t|)"],
-                                        sum_gam_ghmi_off$p.table["mean_GHMI", "Pr(>|t|)"]),
-                          # adjusted R2 for the model
-                          adj_r2 = c(sum_gam_ghmi_dur$r.sq,
-                                     sum_gam_ghmi_on$r.sq,
-                                     sum_gam_ghmi_off$r.sq),
-                          # deviance explained for the model
-                          dev_exp = c(sum_gam_ghmi_dur$dev.expl,
-                                      sum_gam_ghmi_on$dev.expl,
-                                      sum_gam_ghmi_off$dev.expl),
-                          # difference in deviance explained ghmi comp to null model
-                          dev_exp_diff_comp_null = c(sum_gam_ghmi_dur$dev.expl-sum_gam_null_dur$dev.expl,
-                                                     sum_gam_ghmi_on$dev.expl-sum_gam_null_on$dev.expl,
-                                                     sum_gam_ghmi_off$dev.expl-sum_gam_null_off$dev.expl),
-                          # sample size that was used in the model
-                          sample_size = c(sum_gam_ghmi_dur$n,
-                                          sum_gam_ghmi_on$n,
-                                          sum_gam_ghmi_off$n),
-                          model_weight_comp_null = c(weights_dur[2],
-                                                     weights_on[2],
-                                                     weights_off[2]),
-                          spatial_pval = c(pval_spatial_dur, pval_spatial_on, pval_spatial_off)
+  ### summary table ###
+  gam_table <- data.frame(
+    order = tax_info$order,
+    family = tax_info$family,
+    genus = tax_info$genus,
+    species = tax_info$species,
+    model = c("duration", "onset", "offset"),
+    GHMI_estimate = c(sum_gam_ghmi_dur$p.table["mean_GHMI", "Estimate"],
+                      sum_gam_ghmi_on$p.table["mean_GHMI", "Estimate"],
+                      sum_gam_ghmi_off$p.table["mean_GHMI", "Estimate"]),
+    GHMI_se = c(sum_gam_ghmi_dur$p.table["mean_GHMI", "Std. Error"],
+                sum_gam_ghmi_on$p.table["mean_GHMI", "Std. Error"],
+                sum_gam_ghmi_off$p.table["mean_GHMI", "Std. Error"]),
+    GHMI_tval = c(sum_gam_ghmi_dur$p.table["mean_GHMI", "t value"],
+                  sum_gam_ghmi_on$p.table["mean_GHMI", "t value"],
+                  sum_gam_ghmi_off$p.table["mean_GHMI", "t value"]),
+    GHMI_pval = c(sum_gam_ghmi_dur$p.table["mean_GHMI", "Pr(>|t|)"],
+                  sum_gam_ghmi_on$p.table["mean_GHMI", "Pr(>|t|)"],
+                  sum_gam_ghmi_off$p.table["mean_GHMI", "Pr(>|t|)"]),
+    adj_r2 = c(sum_gam_ghmi_dur$r.sq,
+               sum_gam_ghmi_on$r.sq,
+               sum_gam_ghmi_off$r.sq),
+    dev_exp = c(sum_gam_ghmi_dur$dev.expl,
+                sum_gam_ghmi_on$dev.expl,
+                sum_gam_ghmi_off$dev.expl),
+    dev_exp_diff_comp_null = c(sum_gam_ghmi_dur$dev.expl - sum_gam_null_dur$dev.expl,
+                               sum_gam_ghmi_on$dev.expl - sum_gam_null_on$dev.expl,
+                               sum_gam_ghmi_off$dev.expl - sum_gam_null_off$dev.expl),
+    sample_size = c(sum_gam_ghmi_dur$n,
+                    sum_gam_ghmi_on$n,
+                    sum_gam_ghmi_off$n),
+    model_weight_comp_null = c(weights_dur[2],
+                               weights_on[2],
+                               weights_off[2]),
+    spatial_pval = c(pval_spatial_dur, pval_spatial_on, pval_spatial_off)
   )
   
   return(list(
@@ -695,12 +692,27 @@ sample_size_summary <- species_gam %>%
   )%>%
   print()
 
-# Look at orders represented in the data set 
-species_per_order_gam_sig <- species_gam %>%
-  group_by(order) %>%
-  summarise(n_species = n_distinct(species)) %>%
-  arrange(desc(n_species))%>%
+# Look at orders represented in the data set (both sig. and not sig. models)
+species_per_order_gam <- species_gam %>%
+  group_by(model, sig_flag, order) %>%
+  summarise(
+    n_species = n_distinct(species),
+    .groups = "drop"
+  ) %>%
+  arrange(model, sig_flag, desc(n_species)) %>%
   print()
+
+
+# Looking at the direction of the estimates of only significant models
+
+effects_all_sig <- species_gam_significant_p_only %>%
+  select(species, model, GHMI_estimate)
+print(effects_all_sig)
+
+
+
+
+
 
 ########################################################################################################### 
 ############################## Interpreting Model Outputs: 
@@ -714,13 +726,6 @@ unique(species_gam_significant$species[species_gam_significant$model=="onset"]) 
 unique(species_gam_significant$species[species_gam_significant$model=="offset"]) #11 sig. for offset
 unique(species_gam_significant$species[species_gam_significant$model=="duration"]) #6 sig. for duration 
 
-
-# =  species only onset 
-#  = species duration only 
-#  =  species offset only 
-
-#  =  species onset and duration
-#  = species offset and duration only 
 
 
 
@@ -744,8 +749,7 @@ species_no_spatial_effect <- spatial_summary %>%
 print(species_no_spatial_effect)
 
 #For the following 7 species, spatial location is not influencing phenology beyond what GHMI explains:
-#""Bombus impatiens", "Epargyreus clarus", "Eremnophila aureonotata", "Helicoverpa zea",
-#"Papilio troilus", "Phyciodes tharos", "Pyrrharctia isabella" 
+
 
 #Species where lat/long is sig.
 species_with_spatial_effect <- spatial_summary %>%
@@ -754,11 +758,7 @@ species_with_spatial_effect <- spatial_summary %>%
 print(species_with_spatial_effect)
 
 # For the following 14 species, at lat/long is sig. influencing at least one phenology variables 
-# beyond what GHMI explains: "Clogmia albipunctatus"    "Xylocopa virginica"       "Apis mellifera"           "Battus philenor"         
-# "Danaus plexippus"         "Eristalis tenax"          "Euclea delphinii"         "Hylephila phyleus"       
-# "Hypoprepia fucosa"        "Limenitis arthemis"       "Noctua pronuba"           "Papilio glaucus"         
-# ""Tetraopes tetrophthalmus" "Vespula squamosa" 
-
+# beyond what GHMI explains: 
 
 # Looking at which models have spatial significance for each species: 
 sig_spatial_models <- species_gam_significant %>%
@@ -773,14 +773,13 @@ sig_spatial_summary <- sig_spatial_models %>%
 print(sig_spatial_summary, n=14)
 
 # For the following  8 species, at lat/long is sig. influencing offset beyond what GHMI explains: 
-# Battus philenor, Danaus plexippus, Euclea delphinii, Hylephila phyleus, Limenitis arthemis, 
-# Noctua pronuba, Papilio glaucus, Tetraopes tetrophthalmus
+
 
 # For the following 4 species, at lat/long is sig. influencing onset beyond what GHMI explains: 
-# Clogmia albipunctatus, Eristalis tenax, Vespula squamosa, Xylocopa virginica
+
 
 # For the following 4 species, at lat/long is sig. influencing duration beyond what GHMI explains: 
-# Apis mellifera, Clogmia albipunctatus, Hypoprepia fucosa, Xylocopa virginica
+
 
 
 
@@ -1134,8 +1133,10 @@ delta_weird
 
 #Duration is a function of both onset and offset. When both shift in the same direction, the net 
 #change in duration can be minimal, resulting in no significance for the duration model. This can 
-#also be caused by correlated estimation errors between onset and offset, even when onset or 
-#offset shifts significantly.
+#also be caused by the "noise" of both models. If one or both has a high SE, then the combined 
+#SE for duration would be double, making the model significance lower. This could ALSO be from 
+#cases when onset and offset shift in opposite directions, resulting in duration inflating but
+#variance still being high 
 
 
 
@@ -1177,6 +1178,85 @@ ggplot(delta_combined, aes(x = reorder(species, delta_days),
   theme_minimal(base_size = 12)
 
 
+
+delta_weird %>%
+  mutate(
+    z_onset = delta_onset / se_onset,
+    z_offset = delta_offset / se_offset,
+    z_duration = delta_duration / se_duration
+  ) %>%
+  select(species, starts_with("delta"), starts_with("se"), starts_with("z"))
+
+
+
+### This likely ties into why we saw that for all pollinators as a group, GHMI sig. predicts offset
+#   but not onset and not really duration (duration was just barely significant). We'll explore this
+#   more carefully here
+# Look at variance for the overall models
+summary(gam_1)$scale      #duration
+summary(gam_1_off)$scale  #offset 
+summary(gam_1_on)$scale   #onset
+#Offset has lower residual variance (0.3873) than onset (0.4091) and especially duration (0.4720).
+#This means the GAM has a clearer signal-to-noise ratio for offset than for duration.
+
+
+
+###Look at slopes
+offset_slopes <- species_gam %>% filter(model=="offset")
+ggplot(offset_slopes, aes(x = GHMI_estimate)) + geom_histogram(bins=30) + ggtitle("Distribution of species-level offset slopes")
+
+# look at mean and SD of species offset slopes
+offset_slopes %>% summarise(mean = mean(GHMI_estimate, na.rm=TRUE), sd = sd(GHMI_estimate, na.rm=TRUE))
+
+#Compare with duration slopes
+duration_slopes <- species_gam %>% filter(model=="duration")
+ggplot(duration_slopes, aes(x = GHMI_estimate)) + geom_histogram(bins=30) + ggtitle("Distribution of species-level duration slopes")
+
+# look at mean and SD of species duration slopes
+duration_slopes %>% summarise(mean = mean(GHMI_estimate, na.rm=TRUE), sd = sd(GHMI_estimate, na.rm=TRUE))
+
+#Pollinator seasons in more urban areas tend to end later, but the beginning doesn’t shift 
+#systematically. This means some species do show longer seasons, but because onset responses 
+#vary so much across species, the duration trend is inconsistent overall. That’s why offset is 
+#strongly significant, while duration is only weakly significant. 
+
+### Plotting this variance: 
+onset_slopes  <- species_gam %>% filter(model == "onset")
+offset_sd <- sd(offset_slopes$GHMI_estimate, na.rm = TRUE)
+onset_sd  <- sd(onset_slopes$GHMI_estimate, na.rm = TRUE)
+duration_sd <- sd(duration_slopes$GHMI_estimate, na.rm = TRUE)
+
+tibble(
+  variable = c("Onset", "Offset", "Duration"),
+  sd_estimate = c(onset_sd, offset_sd, duration_sd)
+)
+
+var_df <- onset_slopes %>%
+  inner_join(offset_slopes, by = "species", suffix = c("_onset","_offset")) %>%
+  mutate(
+    duration_calc = GHMI_estimate_offset - GHMI_estimate_onset
+  )
+
+var_summary <- tibble(
+  metric = c("Onset", "Offset", "Duration"),
+  variance = c(
+    var(var_df$GHMI_estimate_onset, na.rm = TRUE),
+    var(var_df$GHMI_estimate_offset, na.rm = TRUE),
+    var(var_df$duration_calc, na.rm = TRUE)
+  )
+)
+
+ggplot(var_summary, aes(x = metric, y = variance, fill = metric)) +
+  geom_col() +
+  geom_text(aes(label = round(variance, 1)), vjust = -0.5, size = 5) +
+  scale_fill_manual(values = c("orange", "purple", "steelblue")) +
+  labs(
+    title = "Variance Resulting from Onset and Offset to Duration",
+    y = "Variance of GHMI Slopes",
+    x = "Phenology Metric"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")
 
 
 
@@ -1226,6 +1306,8 @@ plot_spatial_model_group <- function(df, ncol = 2) {
 }
 
 
+
+
 # Plot them 
 plot_spatial_model_group(sig_spatial_onset, ncol = 2)
 plot_spatial_model_group(sig_spatial_offset, ncol = 2)
@@ -1243,8 +1325,8 @@ plot_spatial_model_group(sig_spatial_duration, ncol = 2)
 
 
 
-### Examining cases of very large estimates (more than 365 days of year): Vespula squamosa(onset 
-#   estimate) and Clogmia albipunctatus (duration and onset estimates)
+### Examining cases of very large estimates (more than 365 days of year) for sig. models: 
+#Vespula squamosa(onset estimate) and Clogmia albipunctatus (duration and onset estimates)
 print(results, n=107)
 #Vespula squamosa: n (# of obs) = 10, range of GHMI values = 0.394, sd of GHMI values = 0.132
 #Clogmia albipunctatus: n (# of obs) = 9, range of GHMI values = 0.375, sd of GHMI values = 0.132

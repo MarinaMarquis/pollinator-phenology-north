@@ -23,8 +23,8 @@
 
 
 ###### 4. Grid_Exploration.R 
-#         Input = filtered_5.rds
-#                 a) pollinators_joined_with_grids_5.rds
+#         Input = 
+#                 a) filtered_5.rds
 #                 b) NA24_gridded_map.geojson
 #                 c) NA_24_clipped.geojson
 #         Output = 
