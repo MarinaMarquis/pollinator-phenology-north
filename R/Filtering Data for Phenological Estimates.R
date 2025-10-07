@@ -246,47 +246,38 @@ filtered_5 <- pollinators_grids_clean %>%
          species != "Phalaenostola larentioides"
   )
 
-# Filter: only include grids with >= 6 species and at least 10 observations of each species 
-filtered_5 <- filtered_5 %>%
+
+### Filter: only include species with at least ten observations per grid  
+
+# Identify grid-species combos with at least 10 observations
+valid_combos <- filtered_5 %>%
   group_by(grid_id, species) %>%
-  summarize(n = n(), .groups = 'drop') %>%
-  filter(n >= 10) %>%
-  group_by(grid_id) %>%
-  filter(n_distinct(species) >= 6) %>%
-  ungroup() %>%
-  inner_join(pollinators_grids1, by = c("grid_id", "species"))
+  filter(n() >= 10) %>%
+  distinct(grid_id, species)
 
-# Quick fact check 
-#>= 6 species 
-species_count_check <- filtered_5 %>%
-  group_by(grid_id) %>%
-  summarize(unique_species_count = n_distinct(species), .groups = 'drop')
-#
-if (all(species_count_check$unique_species_count >= 6)) {
-  cat("All grids have at least 6 species.\n")
-} else {
-  cat("Some grids do not have at least 6 species.\n")
-}
+# Filter pollinators_grids_clean to only include those combos
+filtered_5 <- pollinators_grids_clean %>%
+  inner_join(valid_combos, by = c("grid_id", "species"))
 
-#>= 10 observations
+# Quick fact check
 observation_count_check <- filtered_5 %>%
   group_by(grid_id, species) %>%
   summarize(observation_count = n(), .groups = 'drop')
-#
+
 if (all(observation_count_check$observation_count >= 10)) {
-  cat("All species have at least 10 observations.\n")
+  cat("✅ All species have at least 10 observations per grid.\n")
 } else {
-  cat("Some species do not have at least 10 observations.\n")
+  cat("⚠️ Some species do not have at least 10 observations.\n")
 }
 
 
-#All grids have at least 6 species and each species has at least 10 observations. 
+#All grids have at least 10 observations. 
 
 # Let's also make sure the date column is formatted correctly for analysis 
 filtered_5$Date <- as.Date(filtered_5$eventDate)
 
 
-unique(filtered_5$species) #double check new species list: 1,020 species after filtering 
+unique(filtered_5$species) #double check new species list: 1,060 species after filtering 
 
 # Look at the taxonomic groups present 
 unique(filtered_5$genus)
@@ -298,7 +289,7 @@ unique(filtered_5$order)
 #Check and summarize. Currently have 126,619 observations 
 length(unique(five_km_grids$grid_id))  #24,128 grids spanning eco-region NA24 (no data attached)
 length(unique(pollinators_grids$grid_id)) #19,217 grids that have observations in them before filtering
-length(unique(filtered_5$grid_id)) #210 grids with observations after filtering
+length(unique(filtered_5$grid_id)) #826 grids with observations after filtering
 
 
 # Export the rds file 
