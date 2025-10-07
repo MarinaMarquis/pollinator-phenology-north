@@ -6,7 +6,7 @@
 
 # Read in data 
 GHMI <- read.csv("Data/Spatial Data/GHMI/mean_gHM.csv")
-filtered_grids_with_observations <- readRDS("Data/filtered_5.rds")
+filtered_grids_with_observations <- readRDS("Data/filtered_5_up.rds")
 
 # Load packages
 library(sf)
