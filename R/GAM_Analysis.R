@@ -702,6 +702,8 @@ species_per_order_gam <- species_gam %>%
   arrange(model, sig_flag, desc(n_species)) %>%
   print()
 
+#how many species significant
+unique(species_gam_significant_p_only$species) #29 species sig.
 
 # Looking at the direction of the estimates of only significant models
 
