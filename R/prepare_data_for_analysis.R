@@ -35,12 +35,12 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
 
 
 
-# Filter to include only species that are found in at least six grids
+# Filter to include only species that are found in at least ten grids
 phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_species_each_grid_with_GHMI %>%
   filter(species %in% (
     group_by(., species) %>%
       summarize(n_grids = n(), .groups = 'drop') %>%
-      filter(n_grids >= 6) %>%
+      filter(n_grids >= 10) %>%
       pull(species)
   ))
 
@@ -53,6 +53,9 @@ check <- phenology_estimates_all_species_each_grid_with_GHMI %>%
 print(check, n = Inf)
 
 
+#Look at all the species in the data set after this filter
+unique(phenology_estimates_all_species_each_grid_with_GHMI$species)
+
 
 #############################################################################################################
 
@@ -63,7 +66,8 @@ print(check, n = Inf)
 #stomach the thought of running that phenology code again. However, I'll take it out before publication so 
 #that I can keep using this df with the proper species list.Just being lazy for the moment. 
 phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_species_each_grid_with_GHMI %>%
-  filter(species != "Actias luna",
+  filter(species != "Megalodacne heros", 
+         species != "Actias luna",
          species != "Eacles imperialis",
          species != "Hyphantria cunea", 
          species != "Hypercompe scribonia",
@@ -315,8 +319,8 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
 
 # Let's see how many phenology estimates exceeded 365 days of year 
 sum(phenology_estimates_all_species_each_grid_with_GHMI$onset > 365, na.rm = TRUE) #no instances
-sum(phenology_estimates_all_species_each_grid_with_GHMI$offset > 365, na.rm = TRUE) #13 instances 
-sum(phenology_estimates_all_species_each_grid_with_GHMI$duration > 365, na.rm = TRUE) #1 instance 
+sum(phenology_estimates_all_species_each_grid_with_GHMI$offset > 365, na.rm = TRUE) #12 instances 
+sum(phenology_estimates_all_species_each_grid_with_GHMI$duration > 365, na.rm = TRUE) #0 instance 
 
 # We need to investigate these values
 overestimates <- phenology_estimates_all_species_each_grid_with_GHMI %>%
@@ -652,20 +656,19 @@ phenology_filtered <- phenology_estimates_all_species_each_grid_with_GHMI %>%
   filter(!(offset > 365 | duration > 365))
 
 #Look at new species and grids  
-unique(phenology_filtered$species) #107 species 
-unique(phenology_filtered$family) #24 families  
+unique(phenology_filtered$species) #79 species 
+unique(phenology_filtered$family) #22 families  
 unique(phenology_filtered$order) #4 orders 
-unique(phenology_filtered$grid) #282
+unique(phenology_filtered$grid) #767 grids 
 
 #how many grids per species 
 grid_per_spec <- phenology_filtered %>%
   group_by (species)%>%
   summarise(grid_per_spec = n_distinct(grid))
-grid_per_spec #Bombus impatiens found in most grids (190 grids)
+grid_per_spec #Papilio glaucus found in most grids (386 grids)
 
 #Check that it worked
 sum(phenology_filtered$offset > 365, na.rm = TRUE)  
-sum(phenology_filtered$duration > 365, na.rm = TRUE) 
 
 #############################################################################################################
 

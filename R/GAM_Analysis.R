@@ -144,10 +144,10 @@ write.csv(data_for_models_summary, "Data/data_for_models_summary.csv")
 
 ### Look at the make-up of our data after this final level of filtering: 
 #Look at new species and grids  
-unique(fp_data$species) #99 species 
-unique(fp_data$family) #23 families  
+unique(fp_data$species) #77 species 
+unique(fp_data$family) #22 families  
 unique(fp_data$order) #4 orders 
-unique(fp_data$grid) #281
+unique(fp_data$grid) #765 grids 
 species_per_order <- fp_data %>%
   group_by(order) %>%
   summarise(n_species = n_distinct(species)) %>%
@@ -161,7 +161,7 @@ obs_used <- filtered_5 %>%  #filter raw observation data to only include grid/sp
 
 n_obs_used <- nrow(obs_used) # Total # of obs used to produce phenology estimates that we actually
 #used for the GAMs
-n_obs_used
+n_obs_used   #89,241
 
 # Per species
 obs_used_per_species <- obs_used %>%
@@ -252,7 +252,7 @@ gam_1 <- gam(duration ~ mean_GHMI +
              family = gaussian(),
              method = "REML",
              data=fp_data)
-summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0489), as is species (<2e-16) and lat/long(<2e-16)
+summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0133), as is species (<2e-16) and lat/long(<2e-16)
 gam.check(gam_1)
 gam.check(gam_1)$k.check
 #The mean GHMI seems to explain very little deviance in the model, species and lat/long explain much 
@@ -262,10 +262,10 @@ gam.check(gam_1)$k.check
 # Now let's see how they rank
 AIC(gam_null)
 AIC(gam_1)
-# So in this case the null model performed better but not by much, so adding GHMI does not help explain duration
+# So in this case the null model performed worse, so adding GHMI does help explain duration
 
 #Getting model weight 
-aic_val <- c(30512.68, 30510.82)
+aic_val <- c(37627.61, 37624.77)
 delta_aic <- aic_val - min(aic_val)
 weights <- exp(-0.5 * delta_aic) / sum(exp(-0.5 * delta_aic))
 weights #(null, duration model)
@@ -370,18 +370,18 @@ gam_1_on <- gam(onset ~ mean_GHMI +
                 data=fp_data)
 summary(gam_1_on)
 gam.check(gam_1_on)
-# The mean GHMI (not significant) seems to explain very little deviance in the model
+# The mean GHMI significantly predicts onset (p = 0.0498), but this is a marginal significance 
 
 # Now let's see how they rank
 AIC(gam_null_on)
 AIC(gam_1_on)
-#In this case, adding GHMI increases model fit but not enough to be significant 
+#In this case, adding GHMI increases model fit but by very little  
 
 #Getting model weight 
-aic_val_on <- c(29708.91, 29707.84)
+aic_val_on <- c(36767.59, 36767.48)
 delta_aic_on <- aic_val_on - min(aic_val_on)
 weights_on <- exp(-0.5 * delta_aic_on) / sum(exp(-0.5 * delta_aic_on))
-weights_on #(null, duration model)
+weights_on #(null, onset model)
 
 
 # Let's repeat for an individual species
@@ -476,7 +476,7 @@ gam_1_off <- gam(offset ~ mean_GHMI +
                  family = gaussian(),
                  method = "REML",
                  data=fp_data)
-summary(gam_1_off) #GHMI is a sig. predictor of offset (p=8.09e-09)
+summary(gam_1_off) #GHMI is a sig. predictor of offset (p=2.33e-12)
 gam.check(gam_1_off) #not much difference in deviance explained between this model and the null 
 
 # Now let's see how they rank
@@ -485,10 +485,10 @@ AIC(gam_1_off)
 #Adding GHMI improves model fit 
 
 #Getting model weight 
-aic_val_off <- c(28031.33, 28020.6)
+aic_val_off <- c(34564.06, 34536.5)
 delta_aic_off <- aic_val_off - min(aic_val_off)
 weights_off <- exp(-0.5 * delta_aic_off) / sum(exp(-0.5 * delta_aic_off))
-weights_off #(null, duration model)
+weights_off #(null, offset model)
 
 # Let's repeat for an individual species
 gam_null_bi_off <- gam(offset ~ 1 + s(lat, lon, k = 10, bs="tp"), 
@@ -703,7 +703,7 @@ species_per_order_gam <- species_gam %>%
   print()
 
 #how many species significant
-unique(species_gam_significant_p_only$species) #29 species sig.
+unique(species_gam_significant_p_only$species) #27 species sig.
 
 # Looking at the direction of the estimates of only significant models
 
@@ -724,8 +724,8 @@ species_gam_significant <- species_gam %>%
          model_weight_comp_null > 0.75,
          adj_r2 > 0)
 unique(species_gam_significant$species) #20 species sig. 
-unique(species_gam_significant$species[species_gam_significant$model=="onset"]) #8 sig. for onset 
-unique(species_gam_significant$species[species_gam_significant$model=="offset"]) #11 sig. for offset
+unique(species_gam_significant$species[species_gam_significant$model=="onset"]) #23 sig. for onset 
+unique(species_gam_significant$species[species_gam_significant$model=="offset"]) #12 sig. for offset
 unique(species_gam_significant$species[species_gam_significant$model=="duration"]) #6 sig. for duration 
 
 
@@ -793,8 +793,8 @@ effects <- species_gam_significant %>%
   select(species, model, GHMI_estimate)
 print(effects)
 
-# Example: Bombus impatiens, offset increases by ~28 days for every 1-unit increase in GHMI. This means 
-#that offset occurs ~28 days later in fully anthropogenized areas compared to natural areas. 
+# Example: Bombus impatiens, offset increases by ~35 days for every 1-unit increase in GHMI. This means 
+# that offset occurs ~35 days later in fully anthropogenized areas compared to natural areas. 
 
 #Look at GHMI effect for onset, offset, and duration
 effects_onset <- effects %>%
