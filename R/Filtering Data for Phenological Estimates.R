@@ -271,7 +271,7 @@ if (all(observation_count_check$observation_count >= 10)) {
 }
 
 
-#All grids have at least 10 observations. 
+
 
 # Let's also make sure the date column is formatted correctly for analysis 
 filtered_5$Date <- as.Date(filtered_5$eventDate)

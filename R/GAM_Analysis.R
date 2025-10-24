@@ -128,15 +128,14 @@ data_for_models_summary <- fp_data %>%
   group_by(species) %>%
   summarise(
     n_grid_cells = n_distinct(grid),
-    n_observations = n(),
     min_GHMI = min(mean_GHMI, na.rm = TRUE),
     max_GHMI = max(mean_GHMI, na.rm = TRUE),
     GHMI_range = max_GHMI - min_GHMI,
     .groups = "drop"
   ) %>%
-  arrange(desc(n_observations))%>%
+  arrange(desc(n_grid_cells))%>%
   mutate(across(c(min_GHMI, max_GHMI, GHMI_range), ~round(.x, 3))) %>%
-  arrange(desc(n_observations))%>%
+  arrange(desc(n_grid_cells))%>%
   print()
 
 # Export to CSV for easy sharing/use in Excel
@@ -218,6 +217,8 @@ Halictus_ligatus <- fp_data %>%
 
 
 
+
+
 ## Duration -------------------------------------------------------
 
 # Let's do some model testing to see which model will best fit the data
@@ -259,16 +260,18 @@ gam.check(gam_1)$k.check
 #more variation. Model fit not much higher than null model. 
 
 
-# Now let's see how they rank
-AIC(gam_null)
-AIC(gam_1)
-# So in this case the null model performed worse, so adding GHMI does help explain duration
 
-#Getting model weight 
-aic_val <- c(37627.61, 37624.77)
-delta_aic <- aic_val - min(aic_val)
-weights <- exp(-0.5 * delta_aic) / sum(exp(-0.5 * delta_aic))
-weights #(null, duration model)
+# Now let's see how they rank
+aic_null_dur <- AIC(gam_null)
+print(aic_null_dur)
+aic_full_dur <- AIC(gam_1)
+print(aic_full_dur)
+#So in this case the null model performed worse, so adding GHMI does help explain duration  
+
+# Getting model weight 
+# Change in AIC value = full duration model AIC - null duration AIC 
+aic_full_dur - aic_null_dur
+
 
 
 
@@ -373,15 +376,16 @@ gam.check(gam_1_on)
 # The mean GHMI significantly predicts onset (p = 0.0498), but this is a marginal significance 
 
 # Now let's see how they rank
-AIC(gam_null_on)
-AIC(gam_1_on)
+aic_null_on <- AIC(gam_null_on)
+print(aic_null_on)
+aic_full_on <- AIC(gam_1_on)
+print(aic_full_on)
 #In this case, adding GHMI increases model fit but by very little  
 
-#Getting model weight 
-aic_val_on <- c(36767.59, 36767.48)
-delta_aic_on <- aic_val_on - min(aic_val_on)
-weights_on <- exp(-0.5 * delta_aic_on) / sum(exp(-0.5 * delta_aic_on))
-weights_on #(null, onset model)
+# Getting model weight 
+# Change in AIC value = full onset model AIC - null model AIC 
+aic_full_on - aic_null_on
+
 
 
 # Let's repeat for an individual species
@@ -480,15 +484,18 @@ summary(gam_1_off) #GHMI is a sig. predictor of offset (p=2.33e-12)
 gam.check(gam_1_off) #not much difference in deviance explained between this model and the null 
 
 # Now let's see how they rank
-AIC(gam_null_off)
-AIC(gam_1_off)
+aic_null_off <- AIC(gam_null_off)
+print(aic_null_off)
+aic_full_off <- AIC(gam_1_off)
+print(aic_full_off)
+#In this case, adding GHMI increases model fit 
+
+# Getting model weight 
+# Change in AIC value = full offset model AIC - null model AIC 
+aic_full_off - aic_null_off
 #Adding GHMI improves model fit 
 
-#Getting model weight 
-aic_val_off <- c(34564.06, 34536.5)
-delta_aic_off <- aic_val_off - min(aic_val_off)
-weights_off <- exp(-0.5 * delta_aic_off) / sum(exp(-0.5 * delta_aic_off))
-weights_off #(null, offset model)
+
 
 # Let's repeat for an individual species
 gam_null_bi_off <- gam(offset ~ 1 + s(lat, lon, k = 10, bs="tp"), 
@@ -673,6 +680,8 @@ write_csv(species_gam, "Data/GAM_results/gam_results_by_species.csv")
 species_gam_significant_p_only <- species_gam %>%
   filter(GHMI_pval < 0.05)
 
+
+
 # Save it 
 write_csv(species_gam_significant_p_only, "Data/GAM_results/species_gam_significant_p_only.csv")
 
@@ -702,8 +711,6 @@ species_per_order_gam <- species_gam %>%
   arrange(model, sig_flag, desc(n_species)) %>%
   print()
 
-#how many species significant
-unique(species_gam_significant_p_only$species) #27 species sig.
 
 # Looking at the direction of the estimates of only significant models
 
@@ -719,14 +726,11 @@ print(effects_all_sig)
 ########################################################################################################### 
 ############################## Interpreting Model Outputs: 
 ### Filter for significant p-value results, to compare: 
-species_gam_significant <- species_gam %>%
-  filter(GHMI_pval < 0.05,
-         model_weight_comp_null > 0.75,
-         adj_r2 > 0)
-unique(species_gam_significant$species) #20 species sig. 
-unique(species_gam_significant$species[species_gam_significant$model=="onset"]) #23 sig. for onset 
-unique(species_gam_significant$species[species_gam_significant$model=="offset"]) #12 sig. for offset
-unique(species_gam_significant$species[species_gam_significant$model=="duration"]) #6 sig. for duration 
+
+length(unique(species_gam_significant_p_only$species)) #27 species sig. 
+length(unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model=="onset"])) #15 sig. for onset 
+length(unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model=="offset"])) #16 sig. for offset
+length(unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model=="duration"])) #8 sig. for duration 
 
 
 
@@ -734,7 +738,7 @@ unique(species_gam_significant$species[species_gam_significant$model=="duration"
 ### Looking at the geographic location (lat/long) smoother: 
 
 # Count models per species by spatial effect
-spatial_summary <- species_gam_significant %>%
+spatial_summary <- species_gam_significant_p_only %>%
   group_by(species) %>%
   summarize(
     models_with_spatial_effect = sum(spatial_pval < 0.05),
@@ -789,7 +793,7 @@ print(sig_spatial_summary, n=14)
 
 
 ### Looking at the effect of GHMI on flight period, and the direction of this effect 
-effects <- species_gam_significant %>%
+effects <- species_gam_significant_p_only %>%
   select(species, model, GHMI_estimate)
 print(effects)
 
@@ -921,7 +925,7 @@ print(direction_counts)
 
 ### Looking at model fit using adj R^2, adj R squared, and dev_exp
 
-species_gam_significant %>%
+species_gam_significant_p_only %>%
   group_by(model) %>%
   summarise(
     min_r2 = min(adj_r2, na.rm = TRUE),
@@ -937,7 +941,7 @@ species_gam_significant %>%
 
 
 # Deviance and adjusted r^2 explained per model, with species listed 
-species_gam_significant %>%
+species_gam_significant_p_only %>%
   group_by(model) %>%
   arrange(model, desc(dev_exp)) %>%
   dplyr::select(model, species, dev_exp, adj_r2)%>%
@@ -1070,9 +1074,9 @@ ggsave("Figures/GAM_duration_species.png", plot_model_group(duration_species, "d
 #duration shows little or inconsistent change, helping to explain the “weird” cases in our models.
 
 #Splitting up sig. models by phenological estimate 
-sig_onset <- unique(species_gam_significant$species[species_gam_significant$model == "onset"])
-sig_offset <- unique(species_gam_significant$species[species_gam_significant$model == "offset"])
-sig_duration <- unique(species_gam_significant$species[species_gam_significant$model == "duration"])
+sig_onset <- unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model == "onset"])
+sig_offset <- unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model == "offset"])
+sig_duration <- unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model == "duration"])
 
 
 #Weird species model cases: onset or offset significant, duration not
