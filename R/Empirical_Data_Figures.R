@@ -15,7 +15,7 @@ filtered_5_with_landsat <- read.csv("Data/filtered_5_with_GHMI.csv") # mean GHMI
 grids_5 <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #gridded map
 NA_24 <- st_read("Data/Spatial Data/ecoregion geojson/NA_24_clipped.geojson") #map of bioregion NA24 (no grids)
 GHMI <- read.csv("Data/Spatial Data/GHMI/mean_gHM.csv") #mean GHMI per grid of bioregion NA24
-phenology_estimates_data_for_analysis <- readRDS("Data/phenology_estimates_data_for_analysis.rds")
+phenology_estimates_data_for_analysis <- readRDS("Data/final_phenology_df_for_analysis.RDS")
 #data frame of phenology estimates for the final list of species used in analysis 
 
 
@@ -50,7 +50,8 @@ saveRDS(observations_with_landsat_variables, "Data/observations_with_landsat_var
 # To get an idea of which species to look at, we're first looking at how many species in each grid 
 spec_per_grid <- observations_with_landsat_variables %>%
   group_by(species)%>%
-  summarise(grid_per_spec = n_distinct(grid_id))
+  summarise(grid_per_spec = n_distinct(grid_id))%>%
+  arrange(desc(grid_per_spec))
 spec_per_grid 
 
 # We're also looking at amount of observations of each species in each grid 
@@ -446,6 +447,8 @@ ggplot() +
     axis.title = element_blank()
   )
 
+ggsave("Figures/map_of_species_per_grid_cell_centroids.png", width=6, height=6, units="in")
+
 ############################################## Figure 14: Map of Bioregion NA24 with number of observations in 
 ###############                                each grid cell 
 
@@ -501,7 +504,7 @@ GHMI_merged <- grids_5 %>%
 #Plot it
 ggplot(GHMI_merged) +
   geom_sf(aes(fill = mean)) +
-  geom_sf(data = NA_24, color = "black", fill = NA, linewidth = 0.8) +
+  geom_sf(data = NA_24, color = NA, fill = NA) +
   scale_fill_viridis_c(name = "Mean GHMI") +
   theme_bw() +
   labs(title = "Anthropogenic Change Across Bioregion NA24 (GHMI)")+

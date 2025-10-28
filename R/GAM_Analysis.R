@@ -111,6 +111,11 @@ fp_data <- fp_data %>%
 summary(fp_data$mean_GHMI)
 sd(fp_data$mean_GHMI)
 
+# Save it 
+saveRDS(fp_data, "Data/final_phenology_df_for_analysis.RDS")
+
+
+
 # Quick visualization 
 ggplot(fp_data, aes(x = mean_GHMI)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
@@ -667,6 +672,9 @@ species_list <- as.vector(count_sp[!count_sp$count<6,]$species)
 
 # now use the function to get model outputs for all species
 species_gam_full <- setNames(lapply(species_list, gam_by_species), species_list)
+
+# Save for use in other scripts
+saveRDS(species_gam_full, "Data/GAM_results/species_gam_full.rds")
 
 # Extract summary tables into a single dataframe
 species_gam <- bind_rows(lapply(species_gam_full, function(x) x$summary_table))
