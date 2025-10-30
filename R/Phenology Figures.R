@@ -16,8 +16,8 @@ library(broom)
 phenology_estimates_all_species_each_grid_with_landsat <- readRDS("Data/final_phenology_df_for_analysis.RDS")
 grids_5 <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #gridded map
 NA_24 <- st_read("Data/Spatial Data/ecoregion geojson/NA_24_clipped.geojson") #map of bioregion NA24 (no grids)
-species_gam <- read_csv("Data/GAM_results/gam_results_by_species.csv") #individual species GAM results
-species_gam_full <- readRDS("Data/GAM_results/species_gam_full.rds") # full GAM results 
+species_gam <- read_csv("Data/GAM_results/gam_results_by_species.csv") #individual species GAM results, select model outputs 
+species_gam_full <- readRDS("Data/GAM_results/species_gam_full.rds") # full GAM results (not just select model outputs)
 
 
 ##########################################################################################################################
@@ -1044,21 +1044,18 @@ ggsave("Figures/slope_of_all_Lepidoptera_species_duration_plot.png", width=6, he
 
 
 
-
-
-
 ######## Figure 26: Plotting slopes of species' change in total duration across range of GHMI for all species
 
-# Calculate slope and SE per species
 
-# Reorder species by slope
-species_gam_reordered <- species_gam %>%
-  arrange(GHMI_estimate) %>%   # sort by slope
+# Subset duration estimates and reorder species by slope
+species_gam_duration <- species_gam %>%
+  filter(model == "duration" & !is.na(GHMI_estimate)) %>% #filter for only duration model outputs
+  arrange(GHMI_estimate) %>%   #reorder species by slope
   mutate(species = factor(species, levels = unique(species)),
-         species_id = row_number())  # numeric ID in slope order
+         species_id = row_number())
 
 #Plot it 
-ggplot(species_gam_reordered, aes(x = GHMI_estimate, y = species_id)) +
+ggplot(species_gam_duration, aes(x = GHMI_estimate, y = species_id)) +
   geom_point() +
   geom_errorbarh(aes(xmin = GHMI_estimate - GHMI_se, xmax = GHMI_estimate + GHMI_se), height = 0.2) +
   geom_vline(xintercept = 0, color = "red") +
@@ -1074,7 +1071,7 @@ ggplot(species_gam_reordered, aes(x = GHMI_estimate, y = species_id)) +
         axis.title.y = element_text(size = 14, face = "bold"))
 
 #Save it 
-ggsave("Figures/slope_of_species_duration_plot.png", width=6, height=6, units="in", bg = "transparent")
+ggsave("Figures/slope_of_species_duration_plot.png", width=7, height=6, units="in", bg = "transparent")
 
 
 
@@ -1086,12 +1083,15 @@ ggsave("Figures/slope_of_species_duration_plot.png", width=6, height=6, units="i
 
 ######## Figure 27: Plotting slopes of species' onset across range of GHMI for all species
 
-# Subset onset 
-species_gam_reordered_onset <- species_gam_reordered %>%
-  filter(model == "onset" & !is.na(GHMI_estimate))
+# Subset onset estimates and reorder species by slope
+species_gam_onset <- species_gam %>%
+  filter(model == "onset" & !is.na(GHMI_estimate)) %>% #filter for only onset model outputs
+  arrange(GHMI_estimate) %>%   #reorder species by slope
+  mutate(species = factor(species, levels = unique(species)),
+         species_id = row_number())
 
 #Plot it 
-ggplot(species_gam_reordered_onset, aes(x = GHMI_estimate, y = species_id)) +
+ggplot(species_gam_onset, aes(x = GHMI_estimate, y = species_id)) +
   geom_point() +
   geom_errorbarh(aes(xmin = GHMI_estimate - GHMI_se, xmax = GHMI_estimate + GHMI_se), height = 0.2) +
   geom_vline(xintercept = 0, color = "red") +
@@ -1121,9 +1121,12 @@ ggsave("Figures/slope_of_species_onset_plot.png", width=6, height=6, units="in",
 
 ######## Figure 28: Plotting slopes of species' offset across range of GHMI for all species
 
-# Subset offset 
-species_gam_reordered_offset <- species_gam_reordered %>%
-  filter(model == "offset" & !is.na(GHMI_estimate))
+# Subset offset estimates and reorder species by slope
+species_gam_offset <- species_gam %>%
+  filter(model == "offset" & !is.na(GHMI_estimate)) %>% #filter for only offset model outputs
+  arrange(GHMI_estimate) %>%   #reorder species by slope
+  mutate(species = factor(species, levels = unique(species)),
+         species_id = row_number())
 
 #Plot it 
 ggplot(species_gam_reordered_offset, aes(x = GHMI_estimate, y = species_id)) +

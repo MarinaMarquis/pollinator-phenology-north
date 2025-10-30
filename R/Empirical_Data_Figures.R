@@ -15,8 +15,8 @@ filtered_5_with_landsat <- read.csv("Data/filtered_5_with_GHMI.csv") # mean GHMI
 grids_5 <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #gridded map
 NA_24 <- st_read("Data/Spatial Data/ecoregion geojson/NA_24_clipped.geojson") #map of bioregion NA24 (no grids)
 GHMI <- read.csv("Data/Spatial Data/GHMI/mean_gHM.csv") #mean GHMI per grid of bioregion NA24
-phenology_estimates_data_for_analysis <- readRDS("Data/final_phenology_df_for_analysis.RDS")
-#data frame of phenology estimates for the final list of species used in analysis 
+species_gam <- read_csv("Data/GAM_results/gam_results_by_species.csv")
+#data frame of GAM outputs so that we have a final species list that was used for analysis  
 
 
 #Merge them into one data set with observations and landsat variables: 
@@ -30,7 +30,7 @@ observations_with_landsat_variables <- observations_with_landsat_variables %>%
          eventDate, day, month, year)
 
 #Filter data frame to only include species that will be used in final analysis: 
-species_list <- unique(phenology_estimates_data_for_analysis$species)
+species_list <- unique(species_gam$species)
 
 observations_with_landsat_variables <- observations_with_landsat_variables %>%
   filter(species %in% species_list)
@@ -293,7 +293,7 @@ ggplot(lepidoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
     y = "Frequency",
     fill = "GHMI Range"
   ) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+  theme(axis.text.x = element_text(hjust = 1),
         plot.title = element_text(size = 10)
   )
 
@@ -303,7 +303,131 @@ ggsave("Figures/Lepodoptera_Observations_in_Low_and_High_GHMI.png", width=6, hei
 
 
 
-############################################## Figure 11: Observation Frequency of Dione vanillae
+
+
+############################################## Figure 11: Observation Frequency of Hymenoptera
+############################################## in Low versus High GHMI areas throughout the Year
+
+hymenoptera_data <- observations_with_landsat_variables %>%
+  filter(order == "Hymenoptera") %>%
+  filter((mean_GHMI >= 0 & mean_GHMI <= 0.3) | (mean_GHMI >= 0.7 & mean_GHMI <= 1)) 
+
+hymenoptera_data <- hymenoptera_data %>%
+  mutate(
+    day_of_year = as.integer(yday(eventDate)),  # Calculate day_of_year
+    GHMI_range = case_when(
+      mean_GHMI >= 0 & mean_GHMI <= 0.3 ~ "Range 0-0.3",  # Group for mean in [0, 0.3]
+      mean_GHMI >= 0.7 & mean_GHMI <= 1 ~ "Range 0.7-1",  # Group for mean in [0.7, 1]
+      TRUE ~ "Other"  # Optionally, classify other values if any (though they shouldn't be in this case)
+    )
+  )
+
+
+# Plotting the data
+ggplot(hymenoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
+  geom_bar(stat = "count", position = "dodge") +  # Position bars side by side for GHMI ranges
+  scale_fill_brewer(palette = "Set1") +  
+  theme_minimal() +
+  labs(
+    title = "Frequency of Hymenoptera Observations in Low and High Urban Areas (GHMI) Throughout the Year",
+    x = "Day of Year",
+    y = "Frequency",
+    fill = "GHMI Range"
+  ) +
+  theme(axis.text.x = element_text(hjust = 1),
+        plot.title = element_text(size = 10)
+  )
+
+ggsave("Figures/Hymenoptera_Observations_in_Low_and_High_GHMI.png", width=6, height=6, units="in")
+
+
+
+
+
+
+
+############################################## Figure 12: Observation Frequency of Coleoptera
+############################################## in Low versus High GHMI areas throughout the Year
+
+coleoptera_data <- observations_with_landsat_variables %>%
+  filter(order == "Coleoptera") %>%
+  filter((mean_GHMI >= 0 & mean_GHMI <= 0.3) | (mean_GHMI >= 0.7 & mean_GHMI <= 1)) 
+
+coleoptera_data <- coleoptera_data %>%
+  mutate(
+    day_of_year = as.integer(yday(eventDate)),  # Calculate day_of_year
+    GHMI_range = case_when(
+      mean_GHMI >= 0 & mean_GHMI <= 0.3 ~ "Range 0-0.3",  # Group for mean in [0, 0.3]
+      mean_GHMI >= 0.7 & mean_GHMI <= 1 ~ "Range 0.7-1",  # Group for mean in [0.7, 1]
+      TRUE ~ "Other"  # Optionally, classify other values if any (though they shouldn't be in this case)
+    )
+  )
+
+
+# Plotting the data
+ggplot(coleoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
+  geom_bar(stat = "count", position = "dodge") +  # Position bars side by side for GHMI ranges
+  scale_fill_brewer(palette = "Set1") +  
+  theme_minimal() +
+  labs(
+    title = "Frequency of Coleoptera Observations in Low and High Urban Areas (GHMI) Throughout the Year",
+    x = "Day of Year",
+    y = "Frequency",
+    fill = "GHMI Range"
+  ) +
+  theme(axis.text.x = element_text(hjust = 1),
+        plot.title = element_text(size = 10)
+  )
+
+ggsave("Figures/Coleoptera_Observations_in_Low_and_High_GHMI.png", width=6, height=6, units="in")
+
+
+
+
+
+
+############################################## Figure 13: Observation Frequency of Diptera
+############################################## in Low versus High GHMI areas throughout the Year
+
+diptera_data <- observations_with_landsat_variables %>%
+  filter(order == "Diptera") %>%
+  filter((mean_GHMI >= 0 & mean_GHMI <= 0.3) | (mean_GHMI >= 0.7 & mean_GHMI <= 1)) 
+
+diptera_data <- diptera_data %>%
+  mutate(
+    day_of_year = as.integer(yday(eventDate)),  # Calculate day_of_year
+    GHMI_range = case_when(
+      mean_GHMI >= 0 & mean_GHMI <= 0.3 ~ "Range 0-0.3",  # Group for mean in [0, 0.3]
+      mean_GHMI >= 0.7 & mean_GHMI <= 1 ~ "Range 0.7-1",  # Group for mean in [0.7, 1]
+      TRUE ~ "Other"  # Optionally, classify other values if any (though they shouldn't be in this case)
+    )
+  )
+
+
+# Plotting the data
+ggplot(diptera_data, aes(x = day_of_year, fill = GHMI_range)) +
+  geom_bar(stat = "count", position = "dodge") +  # Position bars side by side for GHMI ranges
+  scale_fill_brewer(palette = "Set1") +  
+  theme_minimal() +
+  labs(
+    title = "Frequency of Diptera Observations in Low and High Urban Areas (GHMI) Throughout the Year",
+    x = "Day of Year",
+    y = "Frequency",
+    fill = "GHMI Range"
+  ) +
+  theme(axis.text.x = element_text(hjust = 1),
+        plot.title = element_text(size = 10)
+  )
+
+ggsave("Figures/Diptera_Observations_in_Low_and_High_GHMI.png", width=6, height=6, units="in")
+
+
+
+
+
+
+
+############################################## Figure 14: Observation Frequency of Dione vanillae
 ############################################## in Low versus High GHMI areas throughout the Year
 
 D.v <- observations_with_landsat_variables %>%
@@ -339,7 +463,7 @@ ggsave("Figures/Dione_vanillae_Observations_in_Low_and_High_GHMI.png", width=6, 
 
 
 
-############################################## Figure 12: Compare figure 11 and 12
+############################################## Figure 15: Compare figure 11 and 12
 
 #look at them side-by-side
 ggplot(D.v, aes(x = day_of_year)) +  
@@ -358,7 +482,7 @@ ggsave("Figures/Dione_vanillae_Observations_in_Low_and_High_GHMI_two_figures.png
 
 
 
-############################################## Figure 13: Map of Bioregion NA24 with number of species in each grid 
+############################################## Figure 16: Map of Bioregion NA24 with number of species in each grid 
 ###############                                cell
 
 #Summarize number of species in each grid cell 
@@ -449,7 +573,12 @@ ggplot() +
 
 ggsave("Figures/map_of_species_per_grid_cell_centroids.png", width=6, height=6, units="in")
 
-############################################## Figure 14: Map of Bioregion NA24 with number of observations in 
+
+
+
+
+
+############################################## Figure 17: Map of Bioregion NA24 with number of observations in 
 ###############                                each grid cell 
 
 
@@ -496,7 +625,7 @@ ggsave("Figures/map_of_observations_per_grid_cell.png", width=6, height=6, units
 
 
 
-############################################## Figure 15: Map of GHMI across grid cells of Bioregion NA24 
+############################################## Figure 18: Map of GHMI across grid cells of Bioregion NA24 
 #Make GHMI dataframe into an sf object
 GHMI_merged <- grids_5 %>%
   left_join(GHMI, by = "grid_id")
@@ -527,7 +656,7 @@ ggsave("Figures/GHMI_map_of_Bioregion_NA24.png", width=6, height=6, units="in")
 
 
 
-############################################## Figure 15-18: Number of observations in gridded map of 
+############################################## Figure 19-22: Number of observations in gridded map of 
 #                                              NA24 of 4 sample species 
 
 #Look at species with most observations from the data frame that was created earlier in this script 
@@ -671,7 +800,7 @@ ggsave("Figures/Apis_mellifera_observations_across_grids.png", width = 6, height
 
 
 
-############################################## Figure 19: quick histogram of the available GHMI values
+############################################## Figure 23: quick histogram of the available GHMI values
 #                                              available in Bioregion NA24
 
 # Quick visualization 
