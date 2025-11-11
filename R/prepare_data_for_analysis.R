@@ -35,12 +35,12 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
 
 
 
-# Filter to include only species that are found in at least ten grids
+# Filter to include only species that are found in at least twenty grids
 phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_species_each_grid_with_GHMI %>%
   filter(species %in% (
     group_by(., species) %>%
       summarize(n_grids = n(), .groups = 'drop') %>%
-      filter(n_grids >= 10) %>%
+      filter(n_grids >= 20) %>%
       pull(species)
   ))
 
@@ -60,11 +60,8 @@ unique(phenology_estimates_all_species_each_grid_with_GHMI$species)
 #############################################################################################################
 
 
-#Label the functional groups of all of the species in the study. I've put this chunk of code in the Filterin Data
-#for Phenological Estimates script so that when the phenology estimates are ran in the Phenological_Estimates_by_grid_by_species.R
-#script, these species will have already been filtered out. I'm leaving it here because I can't 
-#stomach the thought of running that phenology code again. However, I'll take it out before publication so 
-#that I can keep using this df with the proper species list.Just being lazy for the moment. 
+#Removing species that aren't pollinators or that we cannot determine to be pollinators (because 
+#there is insufficient peer-reviewed information on their diet)
 phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_species_each_grid_with_GHMI %>%
   filter(species != "Megalodacne heros", 
          species != "Actias luna",
@@ -275,41 +272,6 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
   )
 unique(phenology_estimates_all_species_each_grid_with_GHMI$species) #double check new species list
 
-# Adding functional groups column
-phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_species_each_grid_with_GHMI %>%
-  mutate(functional_group = case_when(
-    species %in% c(
-      "Ascia monuste", "Apis mellifera", "Danaus gilippus", "Danaus plexippus",
-      "Dione vanillae", "Eurema daira", "Hemiargus ceraunus", "Hylephila phyleus",
-      "Junonia coenia", "Leptotes cassius", "Phoebis agarithe", "Polites otho",
-      "Polygonus leo", "Cymaenes tripunctus", "Dryas iulia", "Eumaeus atala",
-      "Heliconius charithonia", "Phocides pigmalion", "Urbanus proteus", 
-      "Xylocopa micans", "Nathalis iole", "Papilio cresphontes", "Euglossa dilemma",
-      "Oligoria maculata", "Parapoynx allionealis", "Polites baracoa", 
-      "Syntomeida epilais", "Limenitis archippus", "Panoquina ocola",
-      "Syngamia florella", "Lerema accius", "Papilio polyxenes", "Phyciodes phaon",
-      "Battus polydamas", "Erynnis horatius", "Halictus poeyi", "Antheraea polyphemus",
-      "Euphoria sepulcralis", "Xylophanes tersa", "Pyrausta tyralis", 
-      "Agapostemon splendens", "Phoebis philea", "Phoebis sennae", "Calpodes ethlius",
-      "Papilio palamedes", "Polites vibex", "Phyciodes tharos", "Copaeodes minima",
-      "Burnsius albezens", "Euphyes arpa", "Bombus pensylvanicus", "Calycopis cecrops",
-      "Strymon melinus", "Polites themistocles", "Papilio troilus", "Vanessa atalanta",
-      "Lycia ypsilon", "Papilio glaucus", "Composia fidelissima", "Utetheisa ornatrix", "Nastra lherminier", "Panoquina panoquin",
-      "Euptoieta claudia", "Thorybes pylades", "Erynnis zarucco", "Battus philenor",
-      "Bombus impatiens", "Atlides halesus", "Trigonopeltastes delta", 
-      "Xylocopa virginica", "Problema byssus"
-    ) ~ "Polyphagous",
-    
-    species %in% c(
-      "Kricogonia lyside", "Junonia neildi", "Anartia jatrophae", "Marpesia petreus"
-    ) ~ "Monophagous",
-    
-    species %in% c(
-      "Habropoda laboriosa", "Pyrisitia lisa", "Papilio polyxenes"
-    ) ~ "Oligophagous",
-    
-    TRUE ~ "Unknown"
-  ))
 
 
 
@@ -319,7 +281,7 @@ phenology_estimates_all_species_each_grid_with_GHMI <- phenology_estimates_all_s
 
 # Let's see how many phenology estimates exceeded 365 days of year 
 sum(phenology_estimates_all_species_each_grid_with_GHMI$onset > 365, na.rm = TRUE) #no instances
-sum(phenology_estimates_all_species_each_grid_with_GHMI$offset > 365, na.rm = TRUE) #12 instances 
+sum(phenology_estimates_all_species_each_grid_with_GHMI$offset > 365, na.rm = TRUE) #10 instances 
 sum(phenology_estimates_all_species_each_grid_with_GHMI$duration > 365, na.rm = TRUE) #0 instance 
 
 # We need to investigate these values
@@ -653,13 +615,16 @@ ggplot(obs_suspicious, aes(x = day_of_year)) +
 # We will now filter out all instances of overestimation, since we know what causes them and have determined
 # that this is not an issue with the entire data set and the way we were estimating phenology
 phenology_filtered <- phenology_estimates_all_species_each_grid_with_GHMI %>%
-  filter(!(offset > 365 | duration > 365))
+  filter(!(offset > 365))
+
+#Check that it worked
+sum(phenology_filtered$offset > 365, na.rm = TRUE) #0 instances 
 
 #Look at new species and grids  
-unique(phenology_filtered$species) #79 species 
-unique(phenology_filtered$family) #22 families  
-unique(phenology_filtered$order) #4 orders 
-unique(phenology_filtered$grid) #767 grids 
+length(unique(phenology_filtered$species)) #54 species 
+length(unique(phenology_filtered$family)) #20 families  
+length(unique(phenology_filtered$order)) #4 orders 
+length(unique(phenology_filtered$grid)) #758 grids 
 
 #how many grids per species 
 grid_per_spec <- phenology_filtered %>%
@@ -667,8 +632,7 @@ grid_per_spec <- phenology_filtered %>%
   summarise(grid_per_spec = n_distinct(grid))
 grid_per_spec #Papilio glaucus found in most grids (386 grids)
 
-#Check that it worked
-sum(phenology_filtered$offset > 365, na.rm = TRUE)  
+
 
 #############################################################################################################
 

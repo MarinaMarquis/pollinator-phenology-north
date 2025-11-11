@@ -148,10 +148,10 @@ write.csv(data_for_models_summary, "Data/data_for_models_summary.csv")
 
 ### Look at the make-up of our data after this final level of filtering: 
 #Look at new species and grids  
-unique(fp_data$species) #77 species 
-unique(fp_data$family) #22 families  
-unique(fp_data$order) #4 orders 
-unique(fp_data$grid) #765 grids 
+length(unique(fp_data$species)) #52 species 
+length(unique(fp_data$family)) #20 families  
+length(unique(fp_data$order)) #4 orders 
+length(unique(fp_data$grid)) #756 grids 
 species_per_order <- fp_data %>%
   group_by(order) %>%
   summarise(n_species = n_distinct(species)) %>%
@@ -165,7 +165,7 @@ obs_used <- filtered_5 %>%  #filter raw observation data to only include grid/sp
 
 n_obs_used <- nrow(obs_used) # Total # of obs used to produce phenology estimates that we actually
 #used for the GAMs
-n_obs_used   #89,241
+n_obs_used   #83012
 
 # Per species
 obs_used_per_species <- obs_used %>%
@@ -258,7 +258,7 @@ gam_1 <- gam(duration ~ mean_GHMI +
              family = gaussian(),
              method = "REML",
              data=fp_data)
-summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0133), as is species (<2e-16) and lat/long(<2e-16)
+summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0147), as is species (<2e-16) and lat/long(<2e-16)
 gam.check(gam_1)
 gam.check(gam_1)$k.check
 #The mean GHMI seems to explain very little deviance in the model, species and lat/long explain much 
@@ -378,13 +378,13 @@ gam_1_on <- gam(onset ~ mean_GHMI +
                 data=fp_data)
 summary(gam_1_on)
 gam.check(gam_1_on)
-# The mean GHMI significantly predicts onset (p = 0.0498), but this is a marginal significance 
+# The mean GHMI does not significantly predict onset (p = 0.0509) 
 
 # Now let's see how they rank
 aic_null_on <- AIC(gam_null_on)
 print(aic_null_on)
 aic_full_on <- AIC(gam_1_on)
-print(aic_full_on)
+  print(aic_full_on)
 #In this case, adding GHMI increases model fit but by very little  
 
 # Getting model weight 
@@ -485,7 +485,7 @@ gam_1_off <- gam(offset ~ mean_GHMI +
                  family = gaussian(),
                  method = "REML",
                  data=fp_data)
-summary(gam_1_off) #GHMI is a sig. predictor of offset (p=2.33e-12)
+summary(gam_1_off) #GHMI is a sig. predictor of offset (p=1.95e-12)
 gam.check(gam_1_off) #not much difference in deviance explained between this model and the null 
 
 # Now let's see how they rank
@@ -575,7 +575,7 @@ gam_by_species <- function(species_name){
     slice(1)
   
   # define k value
-  k_val <- ifelse(nrow(fp_data_sp) <= 20, nrow(fp_data_sp)-1, 20)
+  k_val <- 20
   
   ### duration ###
   gam_null_dur <- gam(duration ~ 1 + s(lat, lon, k = k_val, bs="tp"), 
@@ -663,14 +663,14 @@ gam_by_species <- function(species_name){
   ))
 }
 
-# get list of species 
+# Get list of species 
 count_sp <- fp_data %>%
   group_by(species) %>%
   summarise(count=n()) %>%
   arrange(desc(count))
 species_list <- as.vector(count_sp[!count_sp$count<6,]$species)
 
-# now use the function to get model outputs for all species
+# Now use the function to get model outputs for all species
 species_gam_full <- setNames(lapply(species_list, gam_by_species), species_list)
 
 # Save for use in other scripts
@@ -687,7 +687,6 @@ write_csv(species_gam, "Data/GAM_results/gam_results_by_species.csv")
 # Table with only species that have p-values < 0.05
 species_gam_significant_p_only <- species_gam %>%
   filter(GHMI_pval < 0.05)
-
 
 
 # Save it 
@@ -735,10 +734,10 @@ print(effects_all_sig)
 ############################## Interpreting Model Outputs: 
 ### Filter for significant p-value results, to compare: 
 
-length(unique(species_gam_significant_p_only$species)) #27 species sig. 
-length(unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model=="onset"])) #15 sig. for onset 
-length(unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model=="offset"])) #16 sig. for offset
-length(unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model=="duration"])) #8 sig. for duration 
+length(unique(species_gam_significant_p_only$species)) #21 species sig. 
+length(unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model=="onset"])) #11 sig. for onset 
+length(unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model=="offset"])) #14 sig. for offset
+length(unique(species_gam_significant_p_only$species[species_gam_significant_p_only$model=="duration"])) #6 sig. for duration 
 
 
 
@@ -785,16 +784,6 @@ sig_spatial_summary <- sig_spatial_models %>%
   summarize(significant_models = paste(model, collapse = ", "))
 
 print(sig_spatial_summary, n=14)
-
-# For the following  8 species, at lat/long is sig. influencing offset beyond what GHMI explains: 
-
-
-# For the following 4 species, at lat/long is sig. influencing onset beyond what GHMI explains: 
-
-
-# For the following 4 species, at lat/long is sig. influencing duration beyond what GHMI explains: 
-
-
 
 
 
