@@ -15,7 +15,7 @@ filtered_5_with_landsat <- read.csv("Data/filtered_5_with_GHMI.csv") # mean GHMI
 grids_5 <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #gridded map
 NA_24 <- st_read("Data/Spatial Data/ecoregion geojson/NA_24_clipped.geojson") #map of bioregion NA24 (no grids)
 GHMI <- read.csv("Data/Spatial Data/GHMI/mean_gHM.csv") #mean GHMI per grid of bioregion NA24
-species_gam <- read_csv("Data/GAM_results/gam_results_by_species.csv")
+species_gam <- read.csv("Data/GAM_results/gam_results_by_species.csv")
 #data frame of GAM outputs so that we have a final species list that was used for analysis  
 
 
