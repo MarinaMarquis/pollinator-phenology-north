@@ -12,6 +12,7 @@ library(patchwork)
 library(gridExtra)
 library(grid)
 library(broom)
+library(purrr)
 
 phenology_estimates_all_species_each_grid_with_landsat <- readRDS("Data/final_phenology_df_for_analysis.RDS")
 grids_5 <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #gridded map
@@ -672,50 +673,14 @@ phenology_estimates_all_species_each_grid_with_landsat %>%
 
 #filter for only these species 
 ten_selected_species <- phenology_estimates_all_species_each_grid_with_landsat %>%
-  filter(species=="Apis mellifera"|species=="Bombus impatiens"|species=="Vespula squamosa"|species=="Xylocopa virginica"|
-           species=="Toxomerus geminatus"|species=="Clogmia albipunctatus"|species=="Eristalis tenax"|
-           species=="Coleomegilla maculata"|species=="Papilio troilus"|species=="Urbanus proteus")
+  filter(species=="Apis mellifera"|species=="Bombus impatiens"|species=="Vespula maculifrons"|species=="Xylocopa virginica"|
+           species=="Toxomerus geminatus"|species=="Chauliognathus pensylvanicus"|species=="Toxomerus marginatus"|
+           species=="Tetraopes tetrophthalmus"|species=="Papilio troilus"|species=="Urbanus proteus")
 
 
-#Create a list of the common names
-common_names <- c(
-  "Bombus impatiens" = "Common Eastern Bumble Bee",
-  "Vespula squamosa" = "Southern Yellowjacket",
-  "Apis mellifera" = "Western Honey Bee",
-  "Toxomerus geminatus" = "Eastern Calligrapher",
-  "Clogmia albipunctatus" = "Delta Flower Scarab",
-  "Eristalis tenax" = "Common Drone Fly",
-  "Coleomegilla maculata" = "Spotted Pink Lady Beetle",
-  "Papilio troilus" = "Spicebush Swallowtail",
-  "Urbanus proteus" = "Long-tailed Skipper",
-  "Xylocopa virginica" = "Eastern Carpenter Bee"
-)
 
 
 #Plot it
-phenology_estimates_all_species_each_grid_with_landsat %>%
-  dplyr::select(1:7) %>%
-  dplyr::filter(species %in% names(common_names)) %>%
-  dplyr::mutate(species = common_names[species]) %>%  # relabel species to common names
-  dplyr::select(-grid) %>%
-  pivot_longer(!c(species, mean_GHMI)) %>%
-  dplyr::filter(name == "duration") %>%
-  ggplot(aes(x = mean_GHMI, y = value, color = name)) +
-  geom_point() +
-  theme_bw() +
-  geom_smooth(method = "lm") +
-  facet_wrap(~species, ncol = 2, scales = "free_y") +
-  labs(
-    title = "Total Duration of Flight Period of 10 Species in Low Versus High GHMI Areas",
-    x = "Mean GHMI",
-    y = "Total Duration (Days)"
-  ) +
-  theme(
-    legend.position = "none",
-    plot.title = element_text(size = 10)
-  )
-
-#Can also plot it like this, with scientific names
 phenology_estimates_all_species_each_grid_with_landsat %>%
   dplyr::select(1:7) %>%
   dplyr::filter(species %in% unique(ten_selected_species$species)) %>%  
@@ -749,31 +714,7 @@ ggsave("Figures/total_duration_in_low_versus_high_urban_for_10_pre-selected_spec
 
 ################# Figure 19: comparing onset of 10 pre-selected species 
 
-#Plot it
-phenology_estimates_all_species_each_grid_with_landsat %>%
-  dplyr::select(1:7) %>%
-  dplyr::filter(species %in% names(common_names)) %>%
-  dplyr::mutate(species = common_names[species]) %>%  # relabel species to common names
-  dplyr::select(-grid) %>%
-  pivot_longer(!c(species, mean_GHMI)) %>%
-  dplyr::filter(name == "onset") %>%
-  ggplot(aes(x = mean_GHMI, y = value, color = name)) +
-  geom_point() +
-  theme_bw() +
-  geom_smooth(method = "lm") +
-  facet_wrap(~species, ncol = 2, scales = "free_y") +
-  labs(
-    title = "Onset of Flight Period of 10 Species in Low Versus High GHMI Areas",
-    x = "Mean GHMI",
-    y = "Flight Period Onset (Days)"
-  ) +
-  theme(
-    legend.position = "none",
-    plot.title = element_text(size = 10)
-  )
-
-#Scientific names option
-#Plot it
+#Plot it with onset
 phenology_estimates_all_species_each_grid_with_landsat %>%
   dplyr::select(1:7) %>%
   dplyr::filter(species %in% unique(ten_selected_species$species)) %>%
@@ -808,30 +749,7 @@ ggsave("Figures/onset_in_low_versus_high_urban_for_10_pre-selected_species.png",
 ################# Figure 20: comparing offset of 10 pre-selected species 
 
 
-#Plot it
-phenology_estimates_all_species_each_grid_with_landsat %>%
-  dplyr::select(1:7) %>%
-  dplyr::filter(species %in% names(common_names)) %>%
-  dplyr::mutate(species = common_names[species]) %>%  # relabel species to common names
-  dplyr::select(-grid) %>%
-  pivot_longer(!c(species, mean_GHMI)) %>%
-  dplyr::filter(name == "offset") %>%
-  ggplot(aes(x = mean_GHMI, y = value, color = name)) +
-  geom_point() +
-  theme_bw() +
-  geom_smooth(method = "lm") +
-  facet_wrap(~species, ncol = 2, scales = "free_y") +
-  labs(
-    title = "Offset of Flight Period of 10 Species in Low Versus High GHMI Areas",
-    x = "Mean GHMI",
-    y = "Flight Period Offset (Days)"
-  ) +
-  theme(
-    legend.position = "none",
-    plot.title = element_text(size = 10)
-  )
-
-#Plot with scientific names 
+#Plot it with offset
 phenology_estimates_all_species_each_grid_with_landsat %>%
   dplyr::select(1:7) %>%
   dplyr::filter(species %in% unique(ten_selected_species$species)) %>%
@@ -1049,13 +967,13 @@ ggsave("Figures/slope_of_all_Lepidoptera_species_duration_plot.png", width=6, he
 
 # Subset duration estimates and reorder species by slope
 species_gam_duration <- species_gam %>%
-  filter(model == "duration" & !is.na(GHMI_estimate)) %>% #filter for only duration model outputs
+  filter(model == "duration") %>% #filter for only duration model outputs
   arrange(GHMI_estimate) %>%   #reorder species by slope
   mutate(species = factor(species, levels = unique(species)),
          species_id = row_number())
 
 #Plot it 
-ggplot(species_gam_duration, aes(x = GHMI_estimate, y = species_id)) +
+p_duration <- ggplot(species_gam_duration, aes(x = GHMI_estimate, y = species_id)) +
   geom_point() +
   geom_errorbarh(aes(xmin = GHMI_estimate - GHMI_se, xmax = GHMI_estimate + GHMI_se), height = 0.2) +
   geom_vline(xintercept = 0, color = "red") +
@@ -1069,9 +987,10 @@ ggplot(species_gam_duration, aes(x = GHMI_estimate, y = species_id)) +
         axis.text.y = element_text(size = 12),
         axis.title.x = element_text(size = 14, face = "bold"),
         axis.title.y = element_text(size = 14, face = "bold"))
+p_duration
 
 #Save it 
-ggsave("Figures/slope_of_species_duration_plot.png", width=7, height=6, units="in", bg = "transparent")
+ggsave("Figures/slope_of_species_duration_plot.png", width=6, height=6, units="in", bg = "transparent")
 
 
 
@@ -1085,13 +1004,13 @@ ggsave("Figures/slope_of_species_duration_plot.png", width=7, height=6, units="i
 
 # Subset onset estimates and reorder species by slope
 species_gam_onset <- species_gam %>%
-  filter(model == "onset" & !is.na(GHMI_estimate)) %>% #filter for only onset model outputs
+  filter(model == "onset") %>% #filter for only onset model outputs
   arrange(GHMI_estimate) %>%   #reorder species by slope
   mutate(species = factor(species, levels = unique(species)),
          species_id = row_number())
 
 #Plot it 
-ggplot(species_gam_onset, aes(x = GHMI_estimate, y = species_id)) +
+p_onset <- ggplot(species_gam_onset, aes(x = GHMI_estimate, y = species_id)) +
   geom_point() +
   geom_errorbarh(aes(xmin = GHMI_estimate - GHMI_se, xmax = GHMI_estimate + GHMI_se), height = 0.2) +
   geom_vline(xintercept = 0, color = "red") +
@@ -1107,6 +1026,7 @@ ggplot(species_gam_onset, aes(x = GHMI_estimate, y = species_id)) +
         axis.title.y = element_text(size = 14, face = "bold"))
 
 
+p_onset
 
 #Save it 
 ggsave("Figures/slope_of_species_onset_plot.png", width=6, height=6, units="in", bg = "transparent")
@@ -1123,13 +1043,13 @@ ggsave("Figures/slope_of_species_onset_plot.png", width=6, height=6, units="in",
 
 # Subset offset estimates and reorder species by slope
 species_gam_offset <- species_gam %>%
-  filter(model == "offset" & !is.na(GHMI_estimate)) %>% #filter for only offset model outputs
+  filter(model == "offset") %>% #filter for only offset model outputs
   arrange(GHMI_estimate) %>%   #reorder species by slope
   mutate(species = factor(species, levels = unique(species)),
          species_id = row_number())
 
 #Plot it 
-ggplot(species_gam_reordered_offset, aes(x = GHMI_estimate, y = species_id)) +
+p_offset <- ggplot(species_gam_offset, aes(x = GHMI_estimate, y = species_id)) +
   geom_point() +
   geom_errorbarh(aes(xmin = GHMI_estimate - GHMI_se, xmax = GHMI_estimate + GHMI_se), height = 0.2) +
   geom_vline(xintercept = 0, color = "red") +
@@ -1144,6 +1064,8 @@ ggplot(species_gam_reordered_offset, aes(x = GHMI_estimate, y = species_id)) +
         axis.title.x = element_text(size = 14, face = "bold"),
         axis.title.y = element_text(size = 14, face = "bold"))
 
+p_offset
+
 #Save it 
 ggsave("Figures/slope_of_species_offset_plot.png", width=6, height=6, units="in", bg = "transparent")
 
@@ -1155,69 +1077,118 @@ ggsave("Figures/slope_of_species_offset_plot.png", width=6, height=6, units="in"
 
 
 
-######## Figure 29: Total Duration values across a range of GHMI values for 
-#        8 species 
+######## Figure 29: Plotting slopes of species' onset, offset, and duration across range of GHMI 
+#       for all species (a stacked plot of the past 3 figures)
 
 
-# Filter for the 8 species we want to look at
-selected_species <- c(
-  "Bombus impatiens", "Xylocopa virginica", "Bombus pensylvanicus",
-  "Clogmia albipunctatus", "Eristalis tenax", "Pyrrharctia isabella",
-  "Papilio troilus", "Tetraopes tetrophthalmus")
 
-eight_species <- phenology_estimates_all_species_each_grid_with_landsat %>%
+combined_plot <- (p_duration + 
+                    labs(title = NULL) + 
+                    xlim(-200, 200)) /
+  (p_onset +
+     labs(title = NULL) + 
+     xlim(-200, 200)) /
+  (p_offset +
+     labs(title = NULL) + 
+     xlim(-200, 200))
+
+combined_plot
+
+
+#Save it 
+ggsave("Figures/stacked_slope_of_species_phenology_plot.png", width=6, height=6, units="in", bg = "transparent")
+
+
+
+
+
+
+
+
+######## Figure 30: Total Duration values across a range of GHMI values for 
+#        6 species 
+
+
+# Filter for the 6 species we want to look at
+selected_species <- c("Bombus impatiens",
+                      "Xylocopa virginica",
+                      "Apis mellifera", 
+                      "Battus philenor", 
+                      "Pyrrharctia isabella", 
+                      "Chauliognathus marginatus"
+)
+
+six_species <- phenology_estimates_all_species_each_grid_with_landsat %>%
   filter(species %in% selected_species)
 
 
 # Make a data frame of predictions using the GAM models stored in species_gam_full
-predicted_data <- map_dfr(selected_species, function(sp) {
+prediction_df <- map_dfr(selected_species, function(sp) {
+  
+  # extract GAM
   model <- species_gam_full[[sp]]$models$duration
   
-  # Get GHMI range for this species
-  ghmi_range <- eight_species %>%
-    filter(species == sp) %>%
-    summarise(
-      min_GHMI = min(mean_GHMI, na.rm = TRUE),
-      max_GHMI = max(mean_GHMI, na.rm = TRUE)
-    )
-  
-  # Create a sequence across GHMI range
-  new_data <- data.frame(
-    mean_GHMI = seq(ghmi_range$min_GHMI, ghmi_range$max_GHMI, length.out = 100)
+  # observed GHMI range
+  ghmi_seq <- seq(
+    min(six_species$mean_GHMI[six_species$species == sp], na.rm = TRUE),
+    max(six_species$mean_GHMI[six_species$species == sp], na.rm = TRUE),
+    length.out = 200
   )
   
-  # Use average lat/lon for predictions to hold spatial effect constant
-  sp_avg <- eight_species %>%
+  # average lat/lon for this species
+  sp_avg <- six_species %>%
     filter(species == sp) %>%
-    summarise(lat = mean(lat, na.rm = TRUE), lon = mean(lon, na.rm = TRUE))
+    summarise(
+      lat = mean(lat, na.rm = TRUE),
+      lon = mean(lon, na.rm = TRUE)
+    )
   
-  new_data$lat <- sp_avg$lat
-  new_data$lon <- sp_avg$lon
+  # newdata for prediction
+  newdata <- data.frame(
+    mean_GHMI = ghmi_seq,
+    lat = sp_avg$lat,
+    lon = sp_avg$lon
+  )
   
-  # Get predictions from the GAM
-  preds <- predict(model, newdata = new_data, se.fit = TRUE)
+  # predict with SE
+  preds <- predict(model, newdata = newdata, se.fit = TRUE)
   
-  new_data %>%
+  newdata %>%
     mutate(
       species = sp,
       fit = preds$fit,
-      se = preds$se.fit
+      se = preds$se.fit,
+      lower = fit - 2 * se,
+      upper = fit + 2 * se
     )
 })
 
+# This uses the GAMs (stored in species_gam_full) to predict the duration values we'd expect at each
+#GHMI point. This is so we can create a slope (red line) based on our GAMs. The confidence intervals
+#were calculated using the SE of predicted values from the GAMs output. 
 
-# Merge observed and predicted data
-plot_data <- eight_species
 
 
 # Plot it 
 ggplot() +
-  geom_point(data = eight_species, aes(x = mean_GHMI, y = duration), alpha = 0.5) +
-  geom_line(data = predicted_data, aes(x = mean_GHMI, y = fit), color = "red", linewidth = 1) +
-  geom_ribbon(data = predicted_data,
-              aes(x = mean_GHMI, ymin = fit - 2 * se, ymax = fit + 2 * se),
-              alpha = 0.15, fill = "red") +
-  facet_wrap(~ species, ncol = 2, scales = "free_y") +
+  geom_point(
+    data = six_species,
+    aes(x = mean_GHMI, y = duration),
+    alpha = 0.5
+  ) +
+  geom_line(
+    data = prediction_df,
+    aes(x = mean_GHMI, y = fit),
+    color = "red",
+    linewidth = 1
+  ) +
+  geom_ribbon(
+    data = prediction_df,
+    aes(x = mean_GHMI, ymin = lower, ymax = upper),
+    fill = "red",
+    alpha = 0.15
+  ) +
+  facet_wrap(~ species, ncol = 2, scales = "free") +
   theme_minimal() +
   theme(
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
@@ -1228,13 +1199,13 @@ ggplot() +
     plot.title = element_text(size = 10, face = "bold")
   ) +
   labs(
-    title = "Observed Duration and GAM-predicted Response Across GHMI",
+    title = "Observed Duration Across GHMI and GAM-Predicted Relationship",
     x = "Global Human Modification Index (GHMI)",
     y = "Duration (days)"
   )
 
 # Save it
-ggsave("Figures/duration_across_ghmi_for_8_species.png", width = 8, height = 10, units = "in", bg = "transparent")
+ggsave("Figures/duration_across_ghmi_for_6_species.png", width = 8, height = 10, units = "in", bg = "transparent")
 
 
 
@@ -1258,125 +1229,207 @@ ggsave("Figures/duration_across_ghmi_for_8_species.png", width = 8, height = 10,
 
 
 
-######## Figures 30-32: Flight Period Values Across a Range of GHMI values for the species
-#        that showed GHMI to be a predictor of these flight period values (based on GAMs)
+######## Figure 31: Onset values across a range of GHMI values for 
+#        11 species 
 
 
-
-# Species lists by phenotype
+# Species lists by phenology estimate 
 species_onset <- c("Papilio glaucus", "Xylocopa virginica", "Danaus plexippus", "Apis mellifera",          
-                   "Hylephila phyleus", "Bombus griseocollis", "Papilio troilus", "Bombus pensylvanicus",    
-                   "Protographium marcellus", "Tetraopes tetrophthalmus",  "Strymon melinus",           
-                   "Eremnophila aureonotata", "Clogmia albipunctatus", "Eristalis tenax", "Vespula squamosa")
+                   "Hylephila phyleus", "Bombus griseocollis", "Papilio troilus", 
+                   "Bombus pensylvanicus", "Protographium marcellus", 
+                   "Tetraopes tetrophthalmus", "Strymon melinus")
+
+eleven_species <- phenology_estimates_all_species_each_grid_with_landsat %>%
+  filter(species %in% species_onset)
+
+
+# Make a data frame of predictions using the GAM models stored in species_gam_full
+prediction_df <- map_dfr(species_onset, function(sp) {
+  
+  # extract GAM
+  model <- species_gam_full[[sp]]$models$onset
+  
+  # observed GHMI range
+  ghmi_seq <- seq(
+    min(eleven_species$mean_GHMI[eleven_species$species == sp], na.rm = TRUE),
+    max(eleven_species$mean_GHMI[eleven_species$species == sp], na.rm = TRUE),
+    length.out = 200
+  )
+  
+  # average lat/lon for this species
+  sp_avg <- eleven_species %>%
+    filter(species == sp) %>%
+    summarise(
+      lat = mean(lat, na.rm = TRUE),
+      lon = mean(lon, na.rm = TRUE)
+    )
+  
+  # newdata for prediction
+  newdata <- data.frame(
+    mean_GHMI = ghmi_seq,
+    lat = sp_avg$lat,
+    lon = sp_avg$lon
+  )
+  
+  # predict with SE
+  preds <- predict(model, newdata = newdata, se.fit = TRUE)
+  
+  newdata %>%
+    mutate(
+      species = sp,
+      fit = preds$fit,
+      se = preds$se.fit,
+      lower = fit - 2 * se,
+      upper = fit + 2 * se
+    )
+})
+
+# This uses the GAMs (stored in species_gam_full) to predict the onset values we'd expect at each
+#GHMI point. This is so we can create a slope (red line) based on our GAMs. The confidence intervals
+#were calculated using the SE of predicted values from the GAMs output. 
+
+
+
+# Plot it 
+ggplot() +
+  geom_point(
+    data = eleven_species,
+    aes(x = mean_GHMI, y = onset),
+    alpha = 0.5
+  ) +
+  geom_line(
+    data = prediction_df,
+    aes(x = mean_GHMI, y = fit),
+    color = "red",
+    linewidth = 1
+  ) +
+  geom_ribbon(
+    data = prediction_df,
+    aes(x = mean_GHMI, ymin = lower, ymax = upper),
+    fill = "red",
+    alpha = 0.15
+  ) +
+  facet_wrap(~ species, ncol = 4, scales = "free") +
+  theme_minimal() +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+    panel.spacing = unit(1, "lines"),
+    strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
+    strip.text = element_text(size = 9),
+    axis.text = element_text(size = 8),
+    plot.title = element_text(size = 10, face = "bold")
+  ) +
+  labs(
+    title = "Observed Onset Across GHMI and GAM-Predicted Relationship",
+    x = "Global Human Modification Index (GHMI)",
+    y = "Onset (days)"
+  )
+
+# Save it
+ggsave("Figures/onset_across_ghmi_for_11_species.png", width = 8, height = 10, units = "in", bg = "transparent")
+
+
+
+
+
+
+
+
+######## Figure 32: Offset values across a range of GHMI values for 
+#        14 species 
+
+
 
 species_offset <- c("Papilio glaucus", "Bombus impatiens", "Danaus plexippus", "Epargyreus clarus",        
-                     "Battus philenor", "Phyciodes tharos", "Hylephila phyleus", "Pieris rapae",             
-                     "Pyrrharctia isabella", "Bombus bimaculatus", "Scopula limboundata",
-                    "Tetraopes tetrophthalmus", "Chauliognathus marginatus",  "Marimatha nigrofimbria",
-                    "Noctua pronuba", "Cercyonis pegala")
+                    "Battus philenor",  "Phyciodes tharos", "Hylephila phyleus", "Pieris rapae", 
+                    "Pyrrharctia isabella", "Bombus bimaculatus", "Scopula limboundata", 
+                    "Tetraopes tetrophthalmus", "Chauliognathus marginatus", "Marimatha nigrofimbria")
 
-species_duration <- c("Bombus impatiens", "Xylocopa virginica", "Apis mellifera", "Battus philenor",
-                      "Pyrrharctia isabella", "Chauliognathus marginatus", "Cercyonis pegala",
-                      "Clogmia albipunctatus")
+fourteen_species <- phenology_estimates_all_species_each_grid_with_landsat %>%
+  filter(species %in% species_offset)
 
 
-# Function to plot them 
-plot_significant_species <- function(species_list, response, title_text, save_path = NULL) {
+# Make a data frame of predictions using the GAM models stored in species_gam_full
+prediction_df <- map_dfr(species_offset, function(sp) {
   
-  # Subset observed data
-  observed_data <- phenology_estimates_all_species_each_grid_with_landsat %>%
-    filter(species %in% species_list)
+  # extract GAM
+  model <- species_gam_full[[sp]]$models$offset
   
-  # Generate predictions from GAMs
-  predicted_data <- purrr::map_dfr(species_list, function(sp) {
-    model <- species_gam_full[[sp]]$models[[response]]
-    
-    # Skip species if model missing
-    if (is.null(model)) return(NULL)
-    
-    # Get GHMI range
-    ghmi_range <- observed_data %>%
-      filter(species == sp) %>%
-      summarise(
-        min_GHMI = min(mean_GHMI, na.rm = TRUE),
-        max_GHMI = max(mean_GHMI, na.rm = TRUE)
-      )
-    
-    new_data <- data.frame(
-      mean_GHMI = seq(ghmi_range$min_GHMI, ghmi_range$max_GHMI, length.out = 100)
-    )
-    
-    # Hold spatial smooth constant using average lat/lon
-    sp_avg <- observed_data %>%
-      filter(species == sp) %>%
-      summarise(lat = mean(lat, na.rm = TRUE), lon = mean(lon, na.rm = TRUE))
-    
-    new_data$lat <- sp_avg$lat
-    new_data$lon <- sp_avg$lon
-    
-    # Predict with GAM
-    preds <- predict(model, newdata = new_data, se.fit = TRUE)
-    
-    new_data %>%
-      mutate(
-        species = sp,
-        fit = preds$fit,
-        se = preds$se.fit
-      )
-  })
+  # observed GHMI range
+  ghmi_seq <- seq(
+    min(fourteen_species$mean_GHMI[fourteen_species$species == sp], na.rm = TRUE),
+    max(fourteen_species$mean_GHMI[fourteen_species$species == sp], na.rm = TRUE),
+    length.out = 200
+  )
   
-  # Layout different for each figure 
-  n_species <- length(unique(predicted_data$species))
-  ncol <- ifelse(n_species <= 4, 2,
-                 ifelse(n_species <= 9, 3, 4))  # more species → more columns
-  nrow <- ceiling(n_species / ncol)
-  
-  # Plot it 
-  p <- ggplot() +
-    geom_point(data = observed_data, aes(x = mean_GHMI, y = .data[[response]]), alpha = 0.5) +
-    geom_line(data = predicted_data, aes(x = mean_GHMI, y = fit), color = "red", linewidth = 1) +
-    geom_ribbon(data = predicted_data,
-                aes(x = mean_GHMI, ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.15, fill = "red") +
-    facet_wrap(~ species, ncol = ncol, scales = "free_y") +
-    theme_minimal() +
-    theme(
-      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
-      panel.spacing = unit(1, "lines"),
-      strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
-      strip.text = element_text(size = 9),
-      axis.text = element_text(size = 8),
-      plot.title = element_text(size = 10, face = "bold")
-    ) +
-    labs(
-      title = title_text,
-      x = "Global Human Modification Index (GHMI)",
-      y = paste(response, "(days)")
+  # average lat/lon for this species
+  sp_avg <- fourteen_species %>%
+    filter(species == sp) %>%
+    summarise(
+      lat = mean(lat, na.rm = TRUE),
+      lon = mean(lon, na.rm = TRUE)
     )
   
-  return(p)
-}
+  # newdata for prediction
+  newdata <- data.frame(
+    mean_GHMI = ghmi_seq,
+    lat = sp_avg$lat,
+    lon = sp_avg$lon
+  )
+  
+  # predict with SE
+  preds <- predict(model, newdata = newdata, se.fit = TRUE)
+  
+  newdata %>%
+    mutate(
+      species = sp,
+      fit = preds$fit,
+      se = preds$se.fit,
+      lower = fit - 2 * se,
+      upper = fit + 2 * se
+    )
+})
+
+# This uses the GAMs (stored in species_gam_full) to predict the offset values we'd expect at each
+#GHMI point. This is so we can create a slope (red line) based on our GAMs. The confidence intervals
+#were calculated using the SE of predicted values from the GAMs output. 
 
 
-# Duration
-plot_significant_species(species_duration, "duration",
-                         "Observed Duration and GAM-Predicted Response Across GHMI (Significant Models)")
 
-#Save it
-ggsave("Figures/duration_across_ghmi_for_sig_gam_species.png", width = 8, height = 10, units = "in", bg = "transparent")
+# Plot it 
+ggplot() +
+  geom_point(
+    data = fourteen_species,
+    aes(x = mean_GHMI, y = offset),
+    alpha = 0.5
+  ) +
+  geom_line(
+    data = prediction_df,
+    aes(x = mean_GHMI, y = fit),
+    color = "red",
+    linewidth = 1
+  ) +
+  geom_ribbon(
+    data = prediction_df,
+    aes(x = mean_GHMI, ymin = lower, ymax = upper),
+    fill = "red",
+    alpha = 0.15
+  ) +
+  facet_wrap(~ species, ncol = 4, scales = "free") +
+  theme_minimal() +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+    panel.spacing = unit(1, "lines"),
+    strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
+    strip.text = element_text(size = 9),
+    axis.text = element_text(size = 8),
+    plot.title = element_text(size = 10, face = "bold")
+  ) +
+  labs(
+    title = "Observed Offset Across GHMI and GAM-Predicted Relationship",
+    x = "Global Human Modification Index (GHMI)",
+    y = "Offset (days)"
+  )
 
-
-# Onset
-plot_significant_species(species_onset, "onset",
-                         "Observed Onset and GAM-Predicted Response Across GHMI (Significant Models)")
-
-#Save it
-ggsave("Figures/onset_across_ghmi_for_sig_gam_species.png", width = 8, height = 10, units = "in", bg = "transparent")
-
-# Offset
-plot_significant_species(species_offset, "offset",
-                         "Observed Offset and GAM-Predicted Response Across GHMI (Significant Models)")
-
-#Save it
-ggsave("Figures/offset_across_ghmi_for_sig_gam_species.png", width = 8, height = 10, units = "in", bg = "transparent")
-
+# Save it
+ggsave("Figures/offset_across_ghmi_for_14_species.png", width = 8, height = 10, units = "in", bg = "transparent")
