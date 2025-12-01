@@ -983,6 +983,7 @@ p_duration <- ggplot(species_gam_duration, aes(x = GHMI_estimate, y = species_id
     y = "Species",
     title = "Total Duration of Activity Period Across a Range of GHMI Values for All Species"
   ) +
+  xlim(-200, 200) +
   theme(axis.text.x = element_text(size = 12),
         axis.text.y = element_text(size = 12),
         axis.title.x = element_text(size = 14, face = "bold"),
@@ -1020,6 +1021,7 @@ p_onset <- ggplot(species_gam_onset, aes(x = GHMI_estimate, y = species_id)) +
     y = "Species",
     title = "Onset of Activity Period Across a Range of GHMI Values for All Species"
   ) +
+  xlim(-200, 200) +
   theme(axis.text.x = element_text(size = 12),
         axis.text.y = element_text(size = 12),
         axis.title.x = element_text(size = 14, face = "bold"),
@@ -1059,6 +1061,7 @@ p_offset <- ggplot(species_gam_offset, aes(x = GHMI_estimate, y = species_id)) +
     y = "Species",
     title = "Offset of Activity Period Across a Range of GHMI Values for All Species"
   ) +
+  xlim(-200, 200) +
   theme(axis.text.x = element_text(size = 12),
         axis.text.y = element_text(size = 12),
         axis.title.x = element_text(size = 14, face = "bold"),
