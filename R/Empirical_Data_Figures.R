@@ -223,7 +223,27 @@ ggsave("Figures/frequency_Bombus_impatiens_observations_over_time_all_grids.png"
 
 
 
-############################################## Figure 8: Observation Frequency Throughout 
+############################################## Figure 8: Frequency of Urbanus proteus
+############################################## Occurrences Over Time (2008-2024), across all grids
+
+observations_with_landsat_variables %>%
+  filter(!is.na(eventDate)) %>%  # Remove rows with missing eventDate
+  filter(species == "Urbanus proteus")%>%
+  mutate(day_of_year = as.integer(yday(eventDate))) %>%  # Calculate day_of_year
+  ggplot(aes(x = day_of_year)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Frequency of Urbanus proteus Occurrences Over Time (2008-2024)",
+       x = "Day of Year",
+       y = "Frequency") 
+
+
+ggsave("Figures/frequency_Urbanus_proteus_observations_over_time_all_grids.png", width=6, height=6, units="in")
+
+
+
+
+############################################## Figure 9: Observation Frequency Throughout 
 ############################################## the Year by family
 
 observations_with_landsat_variables %>%
@@ -240,7 +260,7 @@ observations_with_landsat_variables %>%
 ggsave("Figures/observation_frequency_over_time_by_family.png", width=6, height=6, units="in")
 
 
-############################################## Figure 9: Observation Frequency Throughout 
+############################################## Figure 10: Observation Frequency Throughout 
 ############################################## the Year by order
 
 #stacking it by order (family too big)
@@ -264,7 +284,9 @@ observations_with_landsat_variables %>%
 ggsave("Figures/observation_frequency_over_time_by_order.png", width=6, height=6, units="in")
 
 
-############################################## Figure 10: Observation Frequency of Lepidoptera
+
+
+############################################## Figure 11: Observation Frequency of Lepidoptera
 ############################################## in Low versus High GHMI areas throughout the Year
 
 lepidoptera_data <- observations_with_landsat_variables %>%
@@ -305,7 +327,7 @@ ggsave("Figures/Lepodoptera_Observations_in_Low_and_High_GHMI.png", width=6, hei
 
 
 
-############################################## Figure 11: Observation Frequency of Hymenoptera
+############################################## Figure 12: Observation Frequency of Hymenoptera
 ############################################## in Low versus High GHMI areas throughout the Year
 
 hymenoptera_data <- observations_with_landsat_variables %>%
@@ -346,7 +368,7 @@ ggsave("Figures/Hymenoptera_Observations_in_Low_and_High_GHMI.png", width=6, hei
 
 
 
-############################################## Figure 12: Observation Frequency of Coleoptera
+############################################## Figure 13: Observation Frequency of Coleoptera
 ############################################## in Low versus High GHMI areas throughout the Year
 
 coleoptera_data <- observations_with_landsat_variables %>%
@@ -386,7 +408,7 @@ ggsave("Figures/Coleoptera_Observations_in_Low_and_High_GHMI.png", width=6, heig
 
 
 
-############################################## Figure 13: Observation Frequency of Diptera
+############################################## Figure 14: Observation Frequency of Diptera
 ############################################## in Low versus High GHMI areas throughout the Year
 
 diptera_data <- observations_with_landsat_variables %>%
@@ -427,7 +449,7 @@ ggsave("Figures/Diptera_Observations_in_Low_and_High_GHMI.png", width=6, height=
 
 
 
-############################################## Figure 14: Observation Frequency of Dione vanillae
+############################################## Figure 15: Observation Frequency of Dione vanillae
 ############################################## in Low versus High GHMI areas throughout the Year
 
 D.v <- observations_with_landsat_variables %>%
@@ -463,7 +485,7 @@ ggsave("Figures/Dione_vanillae_Observations_in_Low_and_High_GHMI.png", width=6, 
 
 
 
-############################################## Figure 15: Compare figure 11 and 12
+############################################## Figure 16: Compare figure 11 and 12
 
 #look at them side-by-side
 ggplot(D.v, aes(x = day_of_year)) +  
@@ -482,7 +504,7 @@ ggsave("Figures/Dione_vanillae_Observations_in_Low_and_High_GHMI_two_figures.png
 
 
 
-############################################## Figure 16: Map of Bioregion NA24 with number of species in each grid 
+############################################## Figure 17: Map of Bioregion NA24 with number of species in each grid 
 ###############                                cell
 
 #Summarize number of species in each grid cell 
@@ -578,7 +600,7 @@ ggsave("Figures/map_of_species_per_grid_cell_centroids.png", width=6, height=6, 
 
 
 
-############################################## Figure 17: Map of Bioregion NA24 with number of observations in 
+############################################## Figure 18: Map of Bioregion NA24 with number of observations in 
 ###############                                each grid cell 
 
 
@@ -625,7 +647,7 @@ ggsave("Figures/map_of_observations_per_grid_cell.png", width=6, height=6, units
 
 
 
-############################################## Figure 18: Map of GHMI across grid cells of Bioregion NA24 
+############################################## Figure 19: Map of GHMI across grid cells of Bioregion NA24 
 #Make GHMI dataframe into an sf object
 GHMI_merged <- grids_5 %>%
   left_join(GHMI, by = "grid_id")
@@ -656,7 +678,7 @@ ggsave("Figures/GHMI_map_of_Bioregion_NA24.png", width=6, height=6, units="in")
 
 
 
-############################################## Figure 19-22: Number of observations in gridded map of 
+############################################## Figure 20-23: Number of observations in gridded map of 
 #                                              NA24 of 4 sample species 
 
 #Look at species with most observations from the data frame that was created earlier in this script 
@@ -800,7 +822,7 @@ ggsave("Figures/Apis_mellifera_observations_across_grids.png", width = 6, height
 
 
 
-############################################## Figure 23: quick histogram of the available GHMI values
+############################################## Figure 24: quick histogram of the available GHMI values
 #                                              available in Bioregion NA24
 
 # Quick visualization 

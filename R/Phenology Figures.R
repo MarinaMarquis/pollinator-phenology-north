@@ -17,7 +17,7 @@ library(purrr)
 phenology_estimates_all_species_each_grid_with_landsat <- readRDS("Data/final_phenology_df_for_analysis.RDS")
 grids_5 <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #gridded map
 NA_24 <- st_read("Data/Spatial Data/ecoregion geojson/NA_24_clipped.geojson") #map of bioregion NA24 (no grids)
-species_gam <- read_csv("Data/GAM_results/gam_results_by_species.csv") #individual species GAM results, select model outputs 
+species_gam <- read.csv("Data/GAM_results/gam_results_by_species.csv") #individual species GAM results, select model outputs 
 species_gam_full <- readRDS("Data/GAM_results/species_gam_full.rds") # full GAM results (not just select model outputs)
 
 
