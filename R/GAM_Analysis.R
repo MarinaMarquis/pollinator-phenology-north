@@ -742,26 +742,29 @@ length(unique(species_gam_significant_p_only$species[species_gam_significant_p_o
 
 
 
-### Looking at the geographic location (lat/long) smoother: 
+### Looking at the geographic location (lat/long) smoother for significant models only: 
 
-# Count models per species by spatial effect
+# Count models per species by spatial effect 
 spatial_summary <- species_gam_significant_p_only %>%
   group_by(species) %>%
   summarize(
-    models_with_spatial_effect = sum(spatial_pval < 0.05),
-    models_without_spatial_effect = sum(spatial_pval >= 0.05),
+    models_with_spatial_effect = sum(spatial_pval < 0.05),  #(p-value of lat/long is significant)
+    models_without_spatial_effect = sum(spatial_pval >= 0.05), #(p-value of lat/long is not significant)
     total_models = n()
   ) %>%
   arrange(desc(models_with_spatial_effect))
 
-# Species where lat/long is not sig.
+# Species where lat/long is not sig. 
 species_no_spatial_effect <- spatial_summary %>%
   filter(models_with_spatial_effect == 0) %>%
   pull(species)
 
 print(species_no_spatial_effect)
 
-#For the following 7 species, spatial location is not influencing phenology beyond what GHMI explains:
+#For the following 10 species, spatial location is not influencing phenology beyond 
+#what GHMI explains: Bombus bimaculatus, Bombus impatiens, Epargyreus clarus,     
+#Marimatha nigrofimbria, Papilio troilus, Phyciodes tharos, Pieris rapae, 
+#Pyrrharctia isabella, Scopula limboundata, Strymon melinus
 
 
 #Species where lat/long is sig.
@@ -770,11 +773,13 @@ species_with_spatial_effect <- spatial_summary %>%
   pull(species)
 print(species_with_spatial_effect)
 
-# For the following 14 species, at lat/long is sig. influencing at least one phenology variables 
-# beyond what GHMI explains: 
+# For the following 11 species, at lat/long is sig. influencing at least one phenology variable 
+# beyond what GHMI explains: Apis mellifera, Chauliognathus marginatus, Danaus plexippus,         
+# Hylephila phyleus, Papilio glaucus, Tetraopes tetrophthalmus, Xylocopa virginica, 
+# Battus philenor, Bombus griseocollis, Bombus pensylvanicus, Protographium marcellus 
 
 # Looking at which models have spatial significance for each species: 
-sig_spatial_models <- species_gam_significant %>%
+sig_spatial_models <- species_gam_significant_p_only %>%
   filter(species %in% species_with_spatial_effect, spatial_pval < 0.05) %>%
   select(species, model, spatial_pval) %>%
   arrange(species, model)
@@ -785,7 +790,8 @@ sig_spatial_summary <- sig_spatial_models %>%
 
 print(sig_spatial_summary, n=14)
 
-
+# Of the 11 species, 9 showed spatial significance for onset, 6 for offset, and 3 
+# for duration. 
 
 
 

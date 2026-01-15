@@ -235,7 +235,11 @@ observations_with_landsat_variables %>%
   theme_minimal() +
   labs(title = "Frequency of Urbanus proteus Occurrences Over Time (2008-2024)",
        x = "Day of Year",
-       y = "Frequency") 
+       y = "Frequency") +
+  theme(
+    axis.line.y = element_line(color = "black", linewidth = 0.5),
+    axis.line.x = element_line(color = "black", linewidth = 0.5) 
+  )
 
 
 ggsave("Figures/frequency_Urbanus_proteus_observations_over_time_all_grids.png", width=6, height=6, units="in")
