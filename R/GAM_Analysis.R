@@ -273,9 +273,13 @@ aic_full_dur <- AIC(gam_1)
 print(aic_full_dur)
 #So in this case the null model performed worse, so adding GHMI does help explain duration  
 
-# Getting model weight 
-# Change in AIC value = full duration model AIC - null duration AIC 
-aic_full_dur - aic_null_dur
+# Getting delta AIC 
+aic_values_dur <- c(
+  null = aic_null_dur,
+  GHMI = aic_full_dur
+)
+delta_aic_dur <- aic_values_dur - min(aic_values_dur)
+delta_aic_dur
 
 
 
@@ -384,12 +388,19 @@ gam.check(gam_1_on)
 aic_null_on <- AIC(gam_null_on)
 print(aic_null_on)
 aic_full_on <- AIC(gam_1_on)
-  print(aic_full_on)
+print(aic_full_on)
 #In this case, adding GHMI increases model fit but by very little  
 
-# Getting model weight 
-# Change in AIC value = full onset model AIC - null model AIC 
-aic_full_on - aic_null_on
+# Getting delta AIC
+aic_values_on <- c(
+  null = aic_null_on,
+  GHMI = aic_full_on
+)
+
+delta_aic_on <- aic_values_on - min(aic_values_on)
+delta_aic_on
+
+#Weak evidence that adding GHMI improves model fit for onset  
 
 
 
@@ -488,6 +499,9 @@ gam_1_off <- gam(offset ~ mean_GHMI +
 summary(gam_1_off) #GHMI is a sig. predictor of offset (p=1.95e-12)
 gam.check(gam_1_off) #not much difference in deviance explained between this model and the null 
 
+#Visualizing the spatial smooth (lat/long)
+plot(gam_1_off, select = 1)
+
 # Now let's see how they rank
 aic_null_off <- AIC(gam_null_off)
 print(aic_null_off)
@@ -495,10 +509,14 @@ aic_full_off <- AIC(gam_1_off)
 print(aic_full_off)
 #In this case, adding GHMI increases model fit 
 
-# Getting model weight 
-# Change in AIC value = full offset model AIC - null model AIC 
-aic_full_off - aic_null_off
-#Adding GHMI improves model fit 
+# Getting delta AIC 
+aic_values_off <- c(
+  null = aic_null_off,
+  GHMI = aic_full_off
+)
+delta_aic_off <- aic_values_off - min(aic_values_off)
+delta_aic_off
+#Adding GHMI strongly improves model fit 
 
 
 
@@ -548,6 +566,15 @@ gam.check(gam_1_hl_off)
 AICc(gam_null_hl_off)
 AICc(gam_1_hl_off)
 #The ghmi model does better but these results are odd. Model is probably overfitted. 
+
+
+
+
+
+
+
+
+
 
 
 
@@ -650,7 +677,10 @@ gam_by_species <- function(species_name){
     model_weight_comp_null = c(weights_dur[2],
                                weights_on[2],
                                weights_off[2]),
-    spatial_pval = c(pval_spatial_dur, pval_spatial_on, pval_spatial_off)
+    spatial_pval = c(pval_spatial_dur, pval_spatial_on, pval_spatial_off), 
+    delta_AIC = c(delta_aic_dur[2],
+                  delta_aic_on[2],
+                  delta_aic_off[2])
   )
   
   return(list(
@@ -662,6 +692,7 @@ gam_by_species <- function(species_name){
     )
   ))
 }
+
 
 # Get list of species 
 count_sp <- fp_data %>%
@@ -792,6 +823,11 @@ print(sig_spatial_summary, n=14)
 
 # Of the 11 species, 9 showed spatial significance for onset, 6 for offset, and 3 
 # for duration. 
+
+
+
+
+
 
 
 

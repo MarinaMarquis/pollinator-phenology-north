@@ -947,7 +947,11 @@ ggplot(lep_gam, aes(x = species, y = GHMI_estimate)) +
   theme(
     legend.position = "none",
     plot.title = element_text(size = 10),
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 45, hjust = 1), 
+    panel.grid.major = element_blank(),  
+    panel.grid.minor = element_blank(), 
+    panel.border = element_blank(), 
+    axis.line = element_line(color = "black")
   )
 
 
@@ -979,15 +983,19 @@ p_duration <- ggplot(species_gam_duration, aes(x = GHMI_estimate, y = species_id
   geom_vline(xintercept = 0, color = "red") +
   theme_minimal() +
   labs(
-    x = "Slope of Total Duration vs GHMI",
+    x = "Slope of Total Duration vs GHM",
     y = "Species",
-    title = "Total Duration of Activity Period Across a Range of GHMI Values for All Species"
+    title = "Total Duration of Activity Period Across a Range of GHM Values for All Species"
   ) +
   xlim(-200, 200) +
   theme(axis.text.x = element_text(size = 12),
         axis.text.y = element_text(size = 12),
         axis.title.x = element_text(size = 14, face = "bold"),
-        axis.title.y = element_text(size = 14, face = "bold"))
+        axis.title.y = element_text(size = 14, face = "bold"), 
+        panel.grid.major = element_blank(),  
+        panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), 
+        axis.line = element_line(color = "black"))
 p_duration
 
 #Save it 
@@ -1017,15 +1025,19 @@ p_onset <- ggplot(species_gam_onset, aes(x = GHMI_estimate, y = species_id)) +
   geom_vline(xintercept = 0, color = "red") +
   theme_minimal() +
   labs(
-    x = "Slope of Onset vs GHMI",
+    x = "Slope of Onset vs GHM",
     y = "Species",
-    title = "Onset of Activity Period Across a Range of GHMI Values for All Species"
+    title = "Onset of Activity Period Across a Range of GHM Values for All Species"
   ) +
   xlim(-200, 200) +
   theme(axis.text.x = element_text(size = 12),
         axis.text.y = element_text(size = 12),
         axis.title.x = element_text(size = 14, face = "bold"),
-        axis.title.y = element_text(size = 14, face = "bold"))
+        axis.title.y = element_text(size = 14, face = "bold"), 
+        panel.grid.major = element_blank(),  
+        panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), 
+        axis.line = element_line(color = "black"))
 
 
 p_onset
@@ -1057,15 +1069,19 @@ p_offset <- ggplot(species_gam_offset, aes(x = GHMI_estimate, y = species_id)) +
   geom_vline(xintercept = 0, color = "red") +
   theme_minimal() +
   labs(
-    x = "Slope of Offset vs GHMI",
+    x = "Slope of Offset vs GHM",
     y = "Species",
-    title = "Offset of Activity Period Across a Range of GHMI Values for All Species"
+    title = "Offset of Activity Period Across a Range of GHM Values for All Species"
   ) +
   xlim(-200, 200) +
   theme(axis.text.x = element_text(size = 12),
         axis.text.y = element_text(size = 12),
         axis.title.x = element_text(size = 14, face = "bold"),
-        axis.title.y = element_text(size = 14, face = "bold"))
+        axis.title.y = element_text(size = 14, face = "bold"), 
+        panel.grid.major = element_blank(),  
+        panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), 
+        axis.line = element_line(color = "black"))
 
 p_offset
 
@@ -1102,7 +1118,19 @@ combined_plot
 ggsave("Figures/stacked_slope_of_species_phenology_plot.png", width=6, height=6, units="in", bg = "transparent")
 
 
+# side by side version of this figure: 
+combined_plot_side <- 
+  (p_duration +
+     labs(title = NULL) +
+     xlim(-200, 200)) |
+  (p_onset +
+     labs(title = NULL) +
+     xlim(-200, 200)) |
+  (p_offset +
+     labs(title = NULL) +
+     xlim(-200, 200))
 
+combined_plot_side
 
 
 
@@ -1199,7 +1227,7 @@ ggplot() +
     strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
     strip.text = element_text(size = 9),
     axis.text = element_text(size = 8),
-    plot.title = element_text(size = 10, face = "bold")
+    plot.title = element_text(size = 10, face = "bold"),
   ) +
   labs(
     title = "Observed Duration Across GHMI and GAM-Predicted Relationship",
@@ -1312,7 +1340,7 @@ ggplot() +
     fill = "red",
     alpha = 0.15
   ) +
-  facet_wrap(~ species, ncol = 4, scales = "free") +
+  facet_wrap(~ species, ncol = 3, scales = "free") +
   theme_minimal() +
   theme(
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
@@ -1436,3 +1464,9 @@ ggplot() +
 
 # Save it
 ggsave("Figures/offset_across_ghmi_for_14_species.png", width = 8, height = 10, units = "in", bg = "transparent")
+
+
+
+
+
+

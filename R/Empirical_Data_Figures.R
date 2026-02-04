@@ -68,6 +68,25 @@ obs <- observations_with_landsat_variables %>%
   arrange(desc(obs))
 obs
 
+# Frequency of observations across the months 
+obs_over_months <- observations_with_landsat_variables %>%
+  group_by(month)%>%
+  summarise (obs = n()) %>%
+  arrange(desc(obs))%>%
+  print()
+#most observations from July, August, September
+
+# Frequency of observations across the months, grouped by order 
+obs_over_months <- observations_with_landsat_variables %>%
+  group_by(month, order)%>%
+  summarise (obs = n()) %>%
+  arrange(desc(obs))%>%
+  print(n=48)
+#most Lepidopterans were observed in July, August, and September
+#most Hymenopterans were observed in September 
+#most Coleopterans were observed in May and June 
+#most Dipterans were observed in June 
+
 ##########################################################################################################################
 
 
