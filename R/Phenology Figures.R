@@ -13,6 +13,7 @@ library(gridExtra)
 library(grid)
 library(broom)
 library(purrr)
+library(extrafont)
 
 phenology_estimates_all_species_each_grid_with_landsat <- readRDS("Data/final_phenology_df_for_analysis.RDS")
 grids_5 <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #gridded map
@@ -983,26 +984,23 @@ p_duration <- ggplot(species_gam_duration, aes(x = GHMI_estimate, y = species_id
   geom_vline(xintercept = 0, color = "red") +
   theme_minimal() +
   labs(
-    x = "Slope of Total Duration vs GHM",
-    y = "Species",
-    title = "Total Duration of Activity Period Across a Range of GHM Values for All Species"
+    x = "Slope of Total Duration vs GHMI",
+    y = "Species Identification Number",
+    title = "Total Duration of Activity Period Across a Range of GHMI Values for All Species"
   ) +
-  xlim(-200, 200) +
-  theme(axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title.x = element_text(size = 14, face = "bold"),
-        axis.title.y = element_text(size = 14, face = "bold"), 
+  xlim(-200, 250) +
+  theme(axis.text.x = element_text(family = "Times New Roman", size = 12),
+        axis.text.y = element_text(family = "Times New Roman", size = 12),
+        axis.title.x = element_text(family = "Times New Roman", size = 14),
+        axis.title.y = element_text(family = "Times New Roman", size = 14), 
         panel.grid.major = element_blank(),  
         panel.grid.minor = element_blank(), 
-        panel.border = element_blank(), 
+        panel.border = element_rect(color = "black", fill = NA, size = 0.6), 
         axis.line = element_line(color = "black"))
 p_duration
 
 #Save it 
 ggsave("Figures/slope_of_species_duration_plot.png", width=6, height=6, units="in", bg = "transparent")
-
-
-
 
 
 
@@ -1025,18 +1023,18 @@ p_onset <- ggplot(species_gam_onset, aes(x = GHMI_estimate, y = species_id)) +
   geom_vline(xintercept = 0, color = "red") +
   theme_minimal() +
   labs(
-    x = "Slope of Onset vs GHM",
-    y = "Species",
+    x = "Slope of Onset vs GHMI",
+    y = "Species Identification Number",
     title = "Onset of Activity Period Across a Range of GHM Values for All Species"
   ) +
-  xlim(-200, 200) +
-  theme(axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title.x = element_text(size = 14, face = "bold"),
-        axis.title.y = element_text(size = 14, face = "bold"), 
+  xlim(-200, 250) +
+  theme(axis.text.x = element_text(family = "Times New Roman", size = 12),
+        axis.text.y = element_text(family = "Times New Roman", size = 12),
+        axis.title.x = element_text(family = "Times New Roman", size = 14),
+        axis.title.y = element_text(family = "Times New Roman", size = 14), 
         panel.grid.major = element_blank(),  
         panel.grid.minor = element_blank(), 
-        panel.border = element_blank(), 
+        panel.border = element_rect(color = "black", fill = NA, size = 0.6), 
         axis.line = element_line(color = "black"))
 
 
@@ -1069,18 +1067,18 @@ p_offset <- ggplot(species_gam_offset, aes(x = GHMI_estimate, y = species_id)) +
   geom_vline(xintercept = 0, color = "red") +
   theme_minimal() +
   labs(
-    x = "Slope of Offset vs GHM",
-    y = "Species",
+    x = "Slope of Offset vs GHMI",
+    y = "Species Identification Number",
     title = "Offset of Activity Period Across a Range of GHM Values for All Species"
   ) +
-  xlim(-200, 200) +
-  theme(axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title.x = element_text(size = 14, face = "bold"),
-        axis.title.y = element_text(size = 14, face = "bold"), 
+  xlim(-200, 250) +
+  theme(axis.text.x = element_text(family = "Times New Roman", size = 12),
+        axis.text.y = element_text(family = "Times New Roman", size = 12),
+        axis.title.x = element_text(family = "Times New Roman", size = 14),
+        axis.title.y = element_text(family = "Times New Roman", size = 14), 
         panel.grid.major = element_blank(),  
         panel.grid.minor = element_blank(), 
-        panel.border = element_blank(), 
+        panel.border = element_rect(color = "black", fill = NA, size = 0.6), 
         axis.line = element_line(color = "black"))
 
 p_offset
@@ -1097,40 +1095,43 @@ ggsave("Figures/slope_of_species_offset_plot.png", width=6, height=6, units="in"
 
 
 ######## Figure 29: Plotting slopes of species' onset, offset, and duration across range of GHMI 
-#       for all species (a stacked plot of the past 3 figures)
+#       for all species (a combined plot of the past 3 figures)
 
 
 
-combined_plot <- (p_duration + 
-                    labs(title = NULL) + 
-                    xlim(-200, 200)) /
-  (p_onset +
-     labs(title = NULL) + 
-     xlim(-200, 200)) /
-  (p_offset +
-     labs(title = NULL) + 
-     xlim(-200, 200))
-
-combined_plot
+species_gam_all <- bind_rows(
+  species_gam_duration %>% mutate(variable = "Duration"),
+  species_gam_onset     %>% mutate(variable = "Onset"),
+  species_gam_offset    %>% mutate(variable = "Offset")
+)
 
 
-#Save it 
-ggsave("Figures/stacked_slope_of_species_phenology_plot.png", width=6, height=6, units="in", bg = "transparent")
+ggplot(species_gam_all, aes(x = GHMI_estimate, y = species_id)) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = GHMI_estimate - GHMI_se,
+                     xmax = GHMI_estimate + GHMI_se), height = 0.2) +
+  geom_vline(xintercept = 0, color = "red") +
+  facet_wrap(~ variable, nrow = 1) +  
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),                     
+    panel.border = element_rect(color = "black", fill = NA, size = 0.6),
+    axis.text = element_text(family = "Times New Roman", size = 15),
+    axis.title = element_text(family = "Times New Roman", size = 20, face = "bold"),
+    strip.text = element_text(family = "Times New Roman", size = 20, face = "bold"),
+    panel.spacing = unit(1.5, "lines")               
+  ) +
+  labs(x = "Slope vs GHMI", y = "Species Identification Number")
 
 
-# side by side version of this figure: 
-combined_plot_side <- 
-  (p_duration +
-     labs(title = NULL) +
-     xlim(-200, 200)) |
-  (p_onset +
-     labs(title = NULL) +
-     xlim(-200, 200)) |
-  (p_offset +
-     labs(title = NULL) +
-     xlim(-200, 200))
+# Save it 
+ggsave("Figures/combined_plot_phenology_slopes_of_all_species.png",
+       width = 21, height = 11, units = "in", bg = "transparent")
 
-combined_plot_side
+
+
+
+
 
 
 
@@ -1225,9 +1226,10 @@ ggplot() +
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
     panel.spacing = unit(1, "lines"),
     strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
-    strip.text = element_text(size = 9),
-    axis.text = element_text(size = 8),
-    plot.title = element_text(size = 10, face = "bold"),
+    strip.text = element_text(family = "Times New Roman", face = "italic", size = 9),
+    axis.text = element_text(family = "Times New Roman", size = 9),
+    axis.title = element_text(family = "Times New Roman"),
+    plot.title = element_text(family = "Times New Roman", size = 11, face = "bold"),
   ) +
   labs(
     title = "Observed Duration Across GHMI and GAM-Predicted Relationship",
@@ -1237,15 +1239,6 @@ ggplot() +
 
 # Save it
 ggsave("Figures/duration_across_ghmi_for_6_species.png", width = 8, height = 10, units = "in", bg = "transparent")
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1346,10 +1339,11 @@ ggplot() +
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
     panel.spacing = unit(1, "lines"),
     strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
-    strip.text = element_text(size = 9),
-    axis.text = element_text(size = 8),
-    plot.title = element_text(size = 10, face = "bold")
-  ) +
+    strip.text = element_text(family = "Times New Roman", face = "italic", size = 9),
+    axis.text = element_text(family = "Times New Roman", size = 9),
+    axis.title = element_text(family = "Times New Roman"),
+    plot.title = element_text(family = "Times New Roman", size = 11, face = "bold"),
+  )  +
   labs(
     title = "Observed Onset Across GHMI and GAM-Predicted Relationship",
     x = "Global Human Modification Index (GHMI)",
@@ -1452,9 +1446,10 @@ ggplot() +
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
     panel.spacing = unit(1, "lines"),
     strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
-    strip.text = element_text(size = 9),
-    axis.text = element_text(size = 8),
-    plot.title = element_text(size = 10, face = "bold")
+    strip.text = element_text(family = "Times New Roman", face = "italic", size = 9),
+    axis.text = element_text(family = "Times New Roman", size = 9),
+    axis.title = element_text(family = "Times New Roman"),
+    plot.title = element_text(family = "Times New Roman", size = 11, face = "bold"),
   ) +
   labs(
     title = "Observed Offset Across GHMI and GAM-Predicted Relationship",
