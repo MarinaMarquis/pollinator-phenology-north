@@ -119,7 +119,7 @@ saveRDS(fp_data, "Data/final_phenology_df_for_analysis.RDS")
 # Quick visualization 
 ggplot(fp_data, aes(x = mean_GHMI)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
-  theme_classic() +
+  theme_classic(base_size=14) +
   labs(x = "GHMI", y = "Count",
        title = "Distribution of GHMI in the Data Set After Filtering")
 

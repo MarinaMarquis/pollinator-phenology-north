@@ -331,9 +331,9 @@ lepidoptera_data <- lepidoptera_data %>%
 ggplot(lepidoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
   geom_bar(stat = "count", position = "dodge") +  # Position bars side by side for GHMI ranges
   scale_fill_brewer(palette = "Set1") +  
-  theme_minimal() +
+  theme_minimal(base_size=16) +
   labs(
-    title = "Frequency of Lepidoptera Observations in Low and High Urban Areas (GHMI) Throughout the Year",
+    # title = "Frequency of Lepidoptera Observations in Low and High Urban Areas (GHMI) Throughout the Year",
     x = "Day of Year",
     y = "Frequency",
     fill = "GHMI Range"
@@ -372,9 +372,9 @@ hymenoptera_data <- hymenoptera_data %>%
 ggplot(hymenoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
   geom_bar(stat = "count", position = "dodge") +  # Position bars side by side for GHMI ranges
   scale_fill_brewer(palette = "Set1") +  
-  theme_minimal() +
+  theme_minimal(base_size=16) +
   labs(
-    title = "Frequency of Hymenoptera Observations in Low and High Urban Areas (GHMI) Throughout the Year",
+    # title = "Frequency of Hymenoptera Observations in Low and High Urban Areas (GHMI) Throughout the Year",
     x = "Day of Year",
     y = "Frequency",
     fill = "GHMI Range"
@@ -413,9 +413,9 @@ coleoptera_data <- coleoptera_data %>%
 ggplot(coleoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
   geom_bar(stat = "count", position = "dodge") +  # Position bars side by side for GHMI ranges
   scale_fill_brewer(palette = "Set1") +  
-  theme_minimal() +
+  theme_minimal(base_size=16) +
   labs(
-    title = "Frequency of Coleoptera Observations in Low and High Urban Areas (GHMI) Throughout the Year",
+    # title = "Frequency of Coleoptera Observations in Low and High Urban Areas (GHMI) Throughout the Year",
     x = "Day of Year",
     y = "Frequency",
     fill = "GHMI Range"
@@ -453,9 +453,9 @@ diptera_data <- diptera_data %>%
 ggplot(diptera_data, aes(x = day_of_year, fill = GHMI_range)) +
   geom_bar(stat = "count", position = "dodge") +  # Position bars side by side for GHMI ranges
   scale_fill_brewer(palette = "Set1") +  
-  theme_minimal() +
+  theme_minimal(base_size=16) +
   labs(
-    title = "Frequency of Diptera Observations in Low and High Urban Areas (GHMI) Throughout the Year",
+    # title = "Frequency of Diptera Observations in Low and High Urban Areas (GHMI) Throughout the Year",
     x = "Day of Year",
     y = "Frequency",
     fill = "GHMI Range"
@@ -492,9 +492,9 @@ D.v <- D.v %>%
 ggplot(D.v, aes(x = day_of_year, fill = GHMI_range)) +
   geom_bar(stat = "count", position = "dodge") +  # Position bars side by side for GHMI ranges
   scale_fill_brewer(palette = "Set1") +  
-  theme_minimal() +
+  theme_minimal(base_size=16) +
   labs(
-    title = "Dione vanillae Observations by GHMI Value (Day of Year)",
+    # title = "Dione vanillae Observations by GHMI Value (Day of Year)",
     x = "Day of Year",
     y = "Frequency",
     fill = "GHMI Range"

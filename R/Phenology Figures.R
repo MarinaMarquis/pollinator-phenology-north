@@ -1107,18 +1107,18 @@ species_gam_all <- bind_rows(
 
 
 ggplot(species_gam_all, aes(x = GHMI_estimate, y = species_id)) +
-  geom_point() +
+  geom_point(size=3) +
   geom_errorbarh(aes(xmin = GHMI_estimate - GHMI_se,
-                     xmax = GHMI_estimate + GHMI_se), height = 0.2) +
+                     xmax = GHMI_estimate + GHMI_se), height = 0.2, linewidth=1.1) +
   geom_vline(xintercept = 0, color = "red") +
   facet_wrap(~ variable, nrow = 1) +  
   theme_minimal() +
   theme(
     panel.grid = element_blank(),                     
     panel.border = element_rect(color = "black", fill = NA, size = 0.6),
-    axis.text = element_text(family = "Times New Roman", size = 15),
-    axis.title = element_text(family = "Times New Roman", size = 20, face = "bold"),
-    strip.text = element_text(family = "Times New Roman", size = 20, face = "bold"),
+    axis.text = element_text(family = "Times New Roman", size = 30),
+    axis.title = element_text(family = "Times New Roman", size = 35),
+    strip.text = element_text(family = "Times New Roman", size = 35, face="bold"),
     panel.spacing = unit(1.5, "lines")               
   ) +
   labs(x = "Slope vs GHMI", y = "Species Identification Number")
@@ -1237,6 +1237,40 @@ ggplot() +
     y = "Duration (days)"
   )
 
+ggplot() +
+  geom_point(
+    data = six_species,
+    aes(x = mean_GHMI, y = duration),
+    alpha = 0.5
+  ) +
+  geom_line(
+    data = prediction_df,
+    aes(x = mean_GHMI, y = fit),
+    color = "red",
+    linewidth = 1
+  ) +
+  geom_ribbon(
+    data = prediction_df,
+    aes(x = mean_GHMI, ymin = lower, ymax = upper),
+    fill = "red",
+    alpha = 0.15
+  ) +
+  facet_wrap(~ species, ncol = 2, scales = "free") +
+  theme_minimal() +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+    panel.spacing = unit(1, "lines"),
+    strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
+    strip.text = element_text(family = "Times New Roman", face = "italic", size = 16),
+    axis.text = element_text(family = "Times New Roman", size = 16),
+    axis.title = element_text(family = "Times New Roman", size=18)
+  ) +
+  labs(
+    x = "Global Human Modification Index (GHMI)",
+    y = "Duration (days)"
+  )
+
+
 # Save it
 ggsave("Figures/duration_across_ghmi_for_6_species.png", width = 8, height = 10, units = "in", bg = "transparent")
 
@@ -1339,13 +1373,11 @@ ggplot() +
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
     panel.spacing = unit(1, "lines"),
     strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
-    strip.text = element_text(family = "Times New Roman", face = "italic", size = 9),
-    axis.text = element_text(family = "Times New Roman", size = 9),
-    axis.title = element_text(family = "Times New Roman"),
-    plot.title = element_text(family = "Times New Roman", size = 11, face = "bold"),
+    strip.text = element_text(family = "Times New Roman", face = "italic", size = 14),
+    axis.text = element_text(family = "Times New Roman", size = 14),
+    axis.title = element_text(family = "Times New Roman", size=16)
   )  +
   labs(
-    title = "Observed Onset Across GHMI and GAM-Predicted Relationship",
     x = "Global Human Modification Index (GHMI)",
     y = "Onset (days)"
   )
@@ -1447,12 +1479,10 @@ ggplot() +
     panel.spacing = unit(1, "lines"),
     strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
     strip.text = element_text(family = "Times New Roman", face = "italic", size = 9),
-    axis.text = element_text(family = "Times New Roman", size = 9),
-    axis.title = element_text(family = "Times New Roman"),
-    plot.title = element_text(family = "Times New Roman", size = 11, face = "bold"),
+    axis.text = element_text(family = "Times New Roman", size = 12),
+    axis.title = element_text(family = "Times New Roman", size=14)
   ) +
   labs(
-    title = "Observed Offset Across GHMI and GAM-Predicted Relationship",
     x = "Global Human Modification Index (GHMI)",
     y = "Offset (days)"
   )
