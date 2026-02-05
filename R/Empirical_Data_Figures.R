@@ -7,6 +7,7 @@ library(ggplot2)
 library(tidyr)
 library(lubridate)
 library(sf)
+library(extrafont)
 
 
 #Read in data: 
@@ -283,6 +284,9 @@ observations_with_landsat_variables %>%
 ggsave("Figures/observation_frequency_over_time_by_family.png", width=6, height=6, units="in")
 
 
+
+
+
 ############################################## Figure 10: Observation Frequency Throughout 
 ############################################## the Year by order
 
@@ -305,6 +309,8 @@ observations_with_landsat_variables %>%
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
 
 ggsave("Figures/observation_frequency_over_time_by_order.png", width=6, height=6, units="in")
+
+
 
 
 
@@ -338,8 +344,11 @@ ggplot(lepidoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
     y = "Frequency",
     fill = "GHMI Range"
   ) +
-  theme(axis.text.x = element_text(hjust = 1),
-        plot.title = element_text(size = 10)
+  theme(axis.text.x = element_text(hjust = 1, family = "Times New Roman"),
+        axis.title = element_text(family = "Times New Roman"), 
+        plot.title = element_text(size = 10, family = "Times New Roman"), 
+        legend.title = element_text(family = "Times New Roman"), 
+        legend.text = element_text(family = "Times New Roman")
   )
 
 ggsave("Figures/Lepodoptera_Observations_in_Low_and_High_GHMI.png", width=6, height=6, units="in")
@@ -379,8 +388,11 @@ ggplot(hymenoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
     y = "Frequency",
     fill = "GHMI Range"
   ) +
-  theme(axis.text.x = element_text(hjust = 1),
-        plot.title = element_text(size = 10)
+  theme(axis.text.x = element_text(hjust = 1, family = "Times New Roman"),
+        axis.title = element_text(family = "Times New Roman"), 
+        plot.title = element_text(size = 10, family = "Times New Roman"), 
+        legend.title = element_text(family = "Times New Roman"), 
+        legend.text = element_text(family = "Times New Roman")
   )
 
 ggsave("Figures/Hymenoptera_Observations_in_Low_and_High_GHMI.png", width=6, height=6, units="in")
@@ -420,8 +432,11 @@ ggplot(coleoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
     y = "Frequency",
     fill = "GHMI Range"
   ) +
-  theme(axis.text.x = element_text(hjust = 1),
-        plot.title = element_text(size = 10)
+  theme(axis.text.x = element_text(hjust = 1, family = "Times New Roman"),
+        axis.title = element_text(family = "Times New Roman"), 
+        plot.title = element_text(size = 10, family = "Times New Roman"), 
+        legend.title = element_text(family = "Times New Roman"), 
+        legend.text = element_text(family = "Times New Roman")
   )
 
 ggsave("Figures/Coleoptera_Observations_in_Low_and_High_GHMI.png", width=6, height=6, units="in")
@@ -460,8 +475,11 @@ ggplot(diptera_data, aes(x = day_of_year, fill = GHMI_range)) +
     y = "Frequency",
     fill = "GHMI Range"
   ) +
-  theme(axis.text.x = element_text(hjust = 1),
-        plot.title = element_text(size = 10)
+  theme(axis.text.x = element_text(hjust = 1, family = "Times New Roman"),
+        axis.title = element_text(family = "Times New Roman"), 
+        plot.title = element_text(size = 10, family = "Times New Roman"), 
+        legend.title = element_text(family = "Times New Roman"), 
+        legend.text = element_text(family = "Times New Roman")
   )
 
 ggsave("Figures/Diptera_Observations_in_Low_and_High_GHMI.png", width=6, height=6, units="in")
