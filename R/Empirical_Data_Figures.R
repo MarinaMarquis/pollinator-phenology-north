@@ -78,7 +78,7 @@ obs_over_months <- observations_with_landsat_variables %>%
 #most observations from July, August, September
 
 # Frequency of observations across the months, grouped by order 
-obs_over_months <- observations_with_landsat_variables %>%
+obs_over_months_order <- observations_with_landsat_variables %>%
   group_by(month, order)%>%
   summarise (obs = n()) %>%
   arrange(desc(obs))%>%
@@ -87,6 +87,8 @@ obs_over_months <- observations_with_landsat_variables %>%
 #most Hymenopterans were observed in September 
 #most Coleopterans were observed in May and June 
 #most Dipterans were observed in June 
+
+
 
 ##########################################################################################################################
 
@@ -876,3 +878,56 @@ ggplot(GHMI, aes(x = mean)) +
 ggsave("Figures/distribution_of_GHMI_values_in_Bioregion_NA24.png", width=6, height=6, units="in")
 
 
+
+
+############################################## Figure 25: frequency of observations 
+#                                              across GHMI range over the years 
+
+# Frequency of observations across the years, grouped by GHMI. So for each GHMI level, 
+# how many observations were recorded each year? 
+
+# Place observations into GHMI bins, for plotting. Summarise number of observations 
+# in each GHMI bin each year 
+obs_over_GHMI <- observations_with_landsat_variables %>%
+  mutate(GHMI_bin = cut(mean_GHMI, breaks = seq(0, 1, by = 0.1))) %>%
+  group_by(GHMI_bin, year) %>%
+  summarise(obs = n(), .groups = "drop")
+
+# Plot it for just one year 
+obs_over_GHMI_2008 <- obs_over_GHMI %>%
+  filter(year == 2008)
+
+ggplot(obs_over_GHMI_2008, aes(x = GHMI_bin, y = obs)) +
+  geom_col(fill = "steelblue", color = "white") +
+  theme_classic(base_size = 14) +
+  labs(x = "GHMI", y = "Count",
+       title = "Frequency of Observations Over GHMI Range in 2008")
+
+# Now plot multiple years using facet_wrap
+ggplot(obs_over_GHMI, aes(x = GHMI_bin, y = obs)) +
+  geom_col(fill = "steelblue", color = "white") +
+  facet_wrap(~year, scales = "free_y") +
+  theme_classic(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "GHMI",
+       y = "Number of Observations",
+       title = "Frequency of Observations Across GHMI Bins by Year")
+
+# Plot it with years stacked
+ggplot(obs_over_GHMI, aes(x = GHMI_bin, y = obs, fill = factor(year))) +
+  geom_col(color = "white") +
+  theme_classic(base_size = 14) +
+  labs(x = "GHMI",
+       y = "Number of Observations",
+       fill = "Year",
+       title = "Frequency of Observations Across GHMI Bins by Year")
+
+# Line plot 
+ggplot(obs_over_GHMI, aes(x = GHMI_bin, y = obs, group = year, color = factor(year))) +
+  geom_line() +
+  geom_point() +
+  theme_classic(base_size = 14) +
+  labs(x = "GHMI",
+       y = "Number of Observations",
+       color = "Year",
+       title = "Distribution of Observations Across GHMI Bins by Year")
