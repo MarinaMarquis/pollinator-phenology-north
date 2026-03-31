@@ -20,7 +20,7 @@ species_gam <- read.csv("Data/GAM_results/gam_results_by_species.csv")
 #data frame of GAM outputs so that we have a final species list that was used for analysis  
 
 
-#Merge them into one data set with observations and landsat variables: 
+#Merge them into one data set with observations and GHMI: 
 observations_with_landsat_variables <- filtered_5 %>%
   left_join(filtered_5_with_landsat %>%
               select(grid_id, mean_GHMI = mean), by = "grid_id")
