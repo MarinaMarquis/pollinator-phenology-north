@@ -13,6 +13,7 @@ library(phenesse)
 library(sf)
 library(lubridate)
 library(purrr)
+library(ggplot)
 
 
 # Read in the data 
@@ -123,22 +124,80 @@ saveRDS(phenology_estimates_all_species_each_grid, "Data/phenology_estimates_sam
 ########################################################################################################### 
 
 ### Filter phenology data (estimated from observations from years 2009-2024) to only 
-#   have estimates for the same 10 species 
-phenology_estimates_all_species_each_grid_top_ten <- phenology_estimates_all_species_each_grid%>%
+#   have estimates for the same 10 species
+
+# Read back in original (full years) phenology data set under a different name because we
+# are using its first name in this df (phenology_estimates_all_species_each_grid) for the 
+# subsetted data now 
+
+full_data <- readRDS("Data/phenology_estimates_by_grid_by_species.RDS") 
+
+# Now filter to the same ten species in our subsetted df 
+phenology_estimates_all_species_each_grid_top_ten <- full_data%>%
   filter(species %in% top_ten$species)
-  
+
+# Check that it worked  
+length(unique(phenology_estimates_all_species_each_grid_top_ten$species))
 
 ########################################################################################################### 
  
 ### Compare the phenology estimates obtained from observations from years 2009-2024 versus 
 #   years 2012-2020
 
+# Add a column to both data sets denoting which data set they come from 
+full_top <- phenology_estimates_all_species_each_grid_top_ten %>%
+  mutate(dataset = "Full (2009–2024)")
+
+subset_top <- phenology_estimates_all_species_each_grid %>%
+  mutate(dataset = "Subset (2012–2020)")
+
+# Add GHMI back in 
+ghmi_lookup <- observations_with_landsat_variables %>%
+  select(grid_id, mean_GHMI) %>%
+  distinct()
+
+full_top <- full_top %>%
+  left_join(ghmi_lookup, by = c("grid" = "grid_id"))
+
+subset_top <- subset_top %>%
+  left_join(ghmi_lookup, by = c("grid" = "grid_id"))
+
+# Combine data sets 
+combined_df <- bind_rows(full_top, subset_top)
+
+# Plot it: onset 
+ggplot(combined_df, aes(x = mean_GHMI, y = onset, color = dataset)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "GHMI",
+       y = "Onset (day of year)",
+       title = "Onset Across Human Modification Gradient") +
+  theme_minimal()
+# Save it 
+ggsave("Figures/subset_versus_full_data_onset_over_GHMI_10_species.png", width=6, height=6, units="in")
 
 
+# Plot it: offset 
+ggplot(combined_df, aes(x = mean_GHMI, y = offset, color = dataset)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "GHMI",
+       y = "Onset (day of year)",
+       title = "Offset Across Human Modification Gradient") +
+  theme_minimal()
+# Save it 
+ggsave("Figures/subset_versus_full_data_offset_over_GHMI_10_species.png", width=6, height=6, units="in")
 
 
+# Plot it: duration 
+ggplot(combined_df, aes(x = mean_GHMI, y = duration, color = dataset)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "GHMI",
+       y = "Onset (day of year)",
+       title = "Total Duration Across Human Modification Gradient") +
+  theme_minimal()
 
-
-
-
+# Save it 
+ggsave("Figures/subset_versus_full_data_total_duration_over_GHMI_10_species.png", width=6, height=6, units="in")
 
