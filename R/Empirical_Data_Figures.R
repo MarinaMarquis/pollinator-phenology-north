@@ -16,8 +16,10 @@ filtered_5_with_landsat <- read.csv("Data/filtered_5_with_GHMI.csv") # mean GHMI
 grids_5 <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #gridded map
 NA_24 <- st_read("Data/Spatial Data/ecoregion geojson/NA_24_clipped.geojson") #map of bioregion NA24 (no grids)
 GHMI <- read.csv("Data/Spatial Data/GHMI/mean_gHM.csv") #mean GHMI per grid of bioregion NA24
-species_gam <- read.csv("Data/GAM_results/gam_results_by_species.csv")
-#data frame of GAM outputs so that we have a final species list that was used for analysis  
+fp_data <- readRDS("Data/final_phenology_df_for_analysis.RDS")
+#final data frame that was used for in the GAMs so that our raw data can be matched to the
+#species x grid combinations that were actually used for analysis
+
 
 
 #Merge them into one data set with observations and GHMI: 
@@ -25,19 +27,26 @@ observations_with_landsat_variables <- filtered_5 %>%
   left_join(filtered_5_with_landsat %>%
               select(grid_id, mean_GHMI = mean), by = "grid_id")
 
-#only retain necessary columns 
+#Only retain necessary columns 
 observations_with_landsat_variables <- observations_with_landsat_variables %>%
   select(grid_id, mean_GHMI, species, order, family, genus, verbatimScientificName, 
          eventDate, day, month, year)
 
-#Filter data frame to only include species that will be used in final analysis: 
-species_list <- unique(species_gam$species)
+#Valid species x grid combinations that were used for analysis
+valid_combos <- fp_data %>%
+  select(species, grid) %>%
+  distinct()
 
+#Filter our data set with raw observation data to only have species x grid combos used for analysis
 observations_with_landsat_variables <- observations_with_landsat_variables %>%
-  filter(species %in% species_list)
+  filter(species %in% valid_combos$species) %>%
+  inner_join(valid_combos, by = c("species", "grid_id" = "grid"))
 
-#Check that it worked
-unique(observations_with_landsat_variables$species)
+#Make sure it worked
+nrow(distinct(observations_with_landsat_variables, species, grid_id))
+nrow(valid_combos) # looks good 
+setdiff(unique(observations_with_landsat_variables$species), unique(fp_data$species)) # should be empty
+
 
 #Save it: 
 saveRDS(observations_with_landsat_variables, "Data/observations_with_landsat_variables.rds") 

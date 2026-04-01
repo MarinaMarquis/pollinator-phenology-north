@@ -21,7 +21,10 @@ phenology_estimates_all_species_each_grid <- readRDS('Data/phenology_estimates_b
 #phenology estimates for each species in each grid for the years 2009-2024
 observations_with_landsat_variables <- readRDS("Data/observations_with_landsat_variables.rds")
 #raw data of observations, GHMI, and grid cell. Filtered to only include 
-#observations of species that will be used for analysis 
+#observations of species that were used for analysis 
+fp_data <- readRDS("Data/final_phenology_df_for_analysis.RDS")
+#the FINAL data frame that was used for in the GAMs so that our raw data can be matched to the
+#species x grid combinations that were actually used for analysis
 
 
 
@@ -119,28 +122,44 @@ phenology_estimates_all_species_each_grid <- top_species_data %>%
   pmap_dfr(~get_phenology_estimates_function(.x, .y))  # Apply function to each combination
 
 
+
 saveRDS(phenology_estimates_all_species_each_grid, "Data/phenology_estimates_sample_subset.RDS")
 
 ########################################################################################################### 
 
-### Filter phenology data (estimated from observations from years 2009-2024) to only 
-#   have estimates for the same 10 species
+### Filter phenology data of the full df (estimated from observations from years 2009-2024) 
+#   and the subsetted df (2012-2020) to only have estimates for the same 10 species and to match 
+#   the species x grid combinations used in our GAMs, after all the different levels of filtering  
 
 # Read back in original (full years) phenology data set under a different name because we
 # are using its first name in this df (phenology_estimates_all_species_each_grid) for the 
 # subsetted data now 
-
 full_data <- readRDS("Data/phenology_estimates_by_grid_by_species.RDS") 
 
-# Now filter to the same ten species in our subsetted df 
-phenology_estimates_all_species_each_grid_top_ten <- full_data%>%
-  filter(species %in% top_ten$species)
+#Valid species x grid combinations that were used for analysis, but only for our ten species 
+valid_combos_top10 <- fp_data %>%
+  filter(species %in% top_ten$species) %>%
+  select(species, grid) %>%
+  distinct()
 
-# Check that it worked  
-length(unique(phenology_estimates_all_species_each_grid_top_ten$species))
+# Filter full (all years) data set to match the species x grid combos used for analysis 
+phenology_estimates_all_species_each_grid_top_ten <- full_data %>%
+  filter(species %in% top_ten$species) %>%
+  inner_join(valid_combos_top10, by = c("species", "grid"))
+
+# Save it 
+saveRDS(phenology_estimates_all_species_each_grid_top_ten, "Data/phenology_estimates_of_top_ten_species_for_all_years.RDS")
+
+# Now do this for the subsetted data (2012-2020) as well 
+phenology_estimates_all_species_each_grid <- phenology_estimates_all_species_each_grid %>%
+  inner_join(valid_combos_top10, by = c("species", "grid"))
+
+# Save it 
+saveRDS(phenology_estimates_all_species_each_grid, "Data/phenology_estimates_of_top_ten_species_for_2012_to_2020.RDS")
+
+
 
 ########################################################################################################### 
- 
 ### Compare the phenology estimates obtained from observations from years 2009-2024 versus 
 #   years 2012-2020
 
