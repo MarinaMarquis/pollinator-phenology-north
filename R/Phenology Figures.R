@@ -18,8 +18,8 @@ library(extrafont)
 phenology_estimates_all_species_each_grid_with_landsat <- readRDS("Data/final_phenology_df_for_analysis.RDS")
 grids_5 <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #gridded map
 NA_24 <- st_read("Data/Spatial Data/ecoregion geojson/NA_24_clipped.geojson") #map of bioregion NA24 (no grids)
-species_gam <- read.csv("Data/GAM_results/gam_results_by_species.csv") #individual species GAM results, select model outputs 
-species_gam_full <- readRDS("Data/GAM_results/species_gam_full.rds") # full GAM results (not just select model outputs)
+species_gam <- read.csv("Data/GAM_results/gam_results_by_species_w_climate.csv") #individual species GAM results, select model outputs 
+species_gam_full <- readRDS("Data/GAM_results/species_gam_full_w_climate.rds") # full GAM results (not just select model outputs)
 
 
 ##########################################################################################################################
@@ -1000,7 +1000,7 @@ p_duration <- ggplot(species_gam_duration, aes(x = GHMI_estimate, y = species_id
 p_duration
 
 #Save it 
-ggsave("Figures/slope_of_species_duration_plot.png", width=6, height=6, units="in", bg = "transparent")
+ggsave("Figures/slope_of_species_duration_plot_w_climate.png", width=6, height=6, units="in", bg = "transparent")
 
 
 
@@ -1041,7 +1041,7 @@ p_onset <- ggplot(species_gam_onset, aes(x = GHMI_estimate, y = species_id)) +
 p_onset
 
 #Save it 
-ggsave("Figures/slope_of_species_onset_plot.png", width=6, height=6, units="in", bg = "transparent")
+ggsave("Figures/slope_of_species_onset_plot_w_climate.png", width=6, height=6, units="in", bg = "transparent")
 
 
 
@@ -1084,7 +1084,7 @@ p_offset <- ggplot(species_gam_offset, aes(x = GHMI_estimate, y = species_id)) +
 p_offset
 
 #Save it 
-ggsave("Figures/slope_of_species_offset_plot.png", width=6, height=6, units="in", bg = "transparent")
+ggsave("Figures/slope_of_species_offset_plot_w_climate.png", width=6, height=6, units="in", bg = "transparent")
 
 
 
@@ -1125,7 +1125,7 @@ ggplot(species_gam_all, aes(x = GHMI_estimate, y = species_id)) +
 
 
 # Save it 
-ggsave("Figures/combined_plot_phenology_slopes_of_all_species.png",
+ggsave("Figures/combined_plot_phenology_slopes_of_all_species_w_climate.png",
        width = 21, height = 11, units = "in", bg = "transparent")
 
 
@@ -1167,19 +1167,23 @@ prediction_df <- map_dfr(selected_species, function(sp) {
     length.out = 200
   )
   
-  # average lat/lon for this species
+  # average lat/lon for this species and average temp/precip
   sp_avg <- six_species %>%
     filter(species == sp) %>%
     summarise(
       lat = mean(lat, na.rm = TRUE),
-      lon = mean(lon, na.rm = TRUE)
+      lon = mean(lon, na.rm = TRUE),
+      prcp = mean(prcp, na.rm = TRUE),
+      temp = mean(temp, na.rm = TRUE)
     )
   
   # newdata for prediction
   newdata <- data.frame(
     mean_GHMI = ghmi_seq,
     lat = sp_avg$lat,
-    lon = sp_avg$lon
+    lon = sp_avg$lon,
+    temp = sp_avg$temp,
+    prcp = sp_avg$prcp
   )
   
   # predict with SE
@@ -1272,7 +1276,7 @@ ggplot() +
 
 
 # Save it
-ggsave("Figures/duration_across_ghmi_for_6_species.png", width = 8, height = 10, units = "in", bg = "transparent")
+ggsave("Figures/duration_across_ghmi_for_6_species_w_climate.png", width = 8, height = 10, units = "in", bg = "transparent")
 
 
 
