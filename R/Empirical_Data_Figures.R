@@ -940,3 +940,38 @@ ggplot(obs_over_GHMI, aes(x = GHMI_bin, y = obs, group = year, color = factor(ye
        y = "Number of Observations",
        color = "Year",
        title = "Distribution of Observations Across GHMI Bins by Year")
+
+
+
+
+
+
+
+
+############################################## Figure 27: Map of temperature across grid cells of 
+# Bioregion NA24 
+
+
+#Plot it
+ggplot(grids_with_temp_and_precip) +
+  geom_sf(aes(fill = temp)) +
+  geom_sf(data = NA_24, color = NA, fill = NA) +
+  scale_fill_viridis_c(name = "Mean Temperature") +
+  theme_bw() +
+  labs(title = "Mean Temperature Across Bioregion NA24")+
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.background = element_rect(fill = "transparent", color = NA),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    legend.background = element_rect(fill = "transparent", color = NA),
+    legend.box.background = element_rect(fill = "transparent", color = NA),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank(),
+    axis.title = element_blank()
+  )
+
+
+
+
+

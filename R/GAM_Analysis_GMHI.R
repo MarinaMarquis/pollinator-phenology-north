@@ -180,6 +180,12 @@ obs_used_per_sp_grid <- obs_used %>%
   count(species, grid_id, name = "n_obs")%>%
   print()
 
+# Distribution of climatic variables used in the models 
+range(fp_data$temp) # temp ranged from around 6 C to 18 C 
+mean(fp_data$mean_GHMI) # avg temp is 0.5483856
+range(fp_data$prcp) # prc ranged from around 2-6 (cm?) rain
+mean(fp_data$prcp) #average of 3.683758 (cm?) of precip 
+
 ########################################################################################################### 
 
 # Explore data relationships ----------------------------------------------
@@ -268,11 +274,15 @@ gam_1 <- gam(duration ~ mean_GHMI + s(temp) + s(prcp) +
              family = gaussian(),
              method = "REML",
              data=fp_data)
-summary(gam_1) #GHMI is a sig. predictor of duration (p=0.0147), as is species (<2e-16) and lat/long(<2e-16)
+summary(gam_1) #GHMI is a not sig. predictor of duration (p=0.883), but species is sig. (<2e-16) 
+#and  so is lat/long(<2e-16) and temp (9.81e-07)
 gam.check(gam_1)
 gam.check(gam_1)$k.check
 #The mean GHMI seems to explain very little deviance in the model, species and lat/long explain much 
 #more variation. Model fit not much higher than null model. 
+
+draw(gam_1, select = "s(temp)") #taking a closer look at the relationship between temp and duration
+# Lots of variation, but overall duration is generally increasing at higher temperatures
 
 # Let's try to have mean_GHMI as a smooth term
 gam_1_smooth <- gam(duration ~ s(mean_GHMI, k = 50) + s(temp) + s(prcp) +
@@ -281,7 +291,8 @@ gam_1_smooth <- gam(duration ~ s(mean_GHMI, k = 50) + s(temp) + s(prcp) +
              family = gaussian(),
              method = "REML",
              data=fp_data)
-summary(gam_1_smooth) #GHMI is a sig. predictor of duration (p=0.0147), as is species (<2e-16) and lat/long(<2e-16)
+summary(gam_1_smooth) #GHMI is not a sig. predictor of duration (p=0.802), but species is sig. (<2e-16) 
+# and so is lat/long(<2e-16) and temp (7.37e-06)
 gam.check(gam_1_smooth)
 gam.check(gam_1_smooth)$k.check
 #The EDF for GMHI is 1, so the model is saying there is no non-linear relationship between duration and GMHI
@@ -418,7 +429,10 @@ gam_1_on <- gam(onset ~ mean_GHMI + s(temp) + s(prcp) +
                 data=fp_data)
 summary(gam_1_on)
 gam.check(gam_1_on)
-# The mean GHMI does not significantly predict onset (p = 0.0509) 
+# The mean GHMI significantly predicts onset (p = 2e-04)
+draw(gam_1_on, select = "s(temp)") #taking a closer look at the relationship between temp and onset. 
+#Interpretation: Onset is earliest at intermediate temperatures, but delayed at both low and 
+#high temperature extremes.
 
 # let's try it with a smooth term for GHMI
 gam_1_on_smooth <- gam(onset ~ s(mean_GHMI, k=20) + s(temp) + s(prcp) +
@@ -449,7 +463,7 @@ aic_values_on <- c(
 delta_aic_on <- aic_values_on - min(aic_values_on)
 delta_aic_on
 
-#Weak evidence that adding GHMI improves model fit for onset  
+#Strong evidence that adding GHMI improves model fit for onset  
 
 
 
@@ -545,7 +559,7 @@ gam_1_off <- gam(offset ~ mean_GHMI + s(temp) + s(prcp) +
                  family = gaussian(),
                  method = "REML",
                  data=fp_data)
-summary(gam_1_off) #GHMI is a sig. predictor of offset (p=1.95e-12)
+summary(gam_1_off) #GHMI is a sig. predictor of offset (p=3.27e-09)
 gam.check(gam_1_off) #not much difference in deviance explained between this model and the null 
 
 # let's try including GHMI as a smooth term
