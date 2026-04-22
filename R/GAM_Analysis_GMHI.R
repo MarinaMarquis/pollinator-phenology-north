@@ -181,10 +181,23 @@ obs_used_per_sp_grid <- obs_used %>%
   print()
 
 # Distribution of climatic variables used in the models 
-range(fp_data$temp) # temp ranged from around 6 C to 18 C 
-mean(fp_data$mean_GHMI) # avg temp is 0.5483856
-range(fp_data$prcp) # prc ranged from around 2-6 (cm?) rain
-mean(fp_data$prcp) #average of 3.683758 (cm?) of precip 
+
+# From our df, get the GHMI, temp, and precip of each GHMI so we can look at their ranges 
+# and averages 
+variable_summaries <- fp_data %>%
+  select(grid, prcp, temp, mean_GHMI)%>%
+  distinct(grid, prcp, temp, mean_GHMI)
+sum(duplicated(variable_summaries$grid)) #make sure it worked 
+
+range(variable_summaries$temp) # temp ranged from 6.984389 to 18.213873 C
+mean(variable_summaries$temp) # avg temp is 13.57113 C
+sd(variable_summaries$temp) # temp has a standard deviation of 2.643663
+range(variable_summaries$prcp) # prcp ranged from around 2.490541 5.978967 mm 
+mean(variable_summaries$prcp) #average of 3.759373 mm of precip 
+sd(variable_summaries$prcp) # prcp has a standard deviation of 0.5650605
+range(variable_summaries$mean_GHMI) # GHMI ranged from 0.0002226816 to 0.9191919168
+mean(variable_summaries$mean_GHMI) #average GHMI of 0.4998607
+sd(variable_summaries$mean_GHMI) #GHMI has a standard deviation of 0.2025444
 
 ########################################################################################################### 
 
@@ -833,9 +846,10 @@ effects_all_sig <- species_gam_significant_p_only %>%
   select(species, model, GHMI_estimate)
 print(effects_all_sig)
 
-
-
-
+effects_all_sig%>%
+  filter(model=="onset")
+effects_all_sig%>%
+  filter(model=="offset")
 
 
 ########################################################################################################### 
