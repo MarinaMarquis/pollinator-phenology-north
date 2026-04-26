@@ -362,7 +362,7 @@ ggplot(lepidoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
         legend.text = element_text(family = "Times New Roman")
   )
 
-ggsave("Figures/Lepodoptera_Observations_in_Low_and_High_GHMI.png", width=6, height=6, units="in")
+ggsave("Figures/Lepidoptera_Observations_in_Low_and_High_GHMI.png", width=5.28, height=5.28, units="in")
 
 
 
@@ -406,7 +406,7 @@ ggplot(hymenoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
         legend.text = element_text(family = "Times New Roman")
   )
 
-ggsave("Figures/Hymenoptera_Observations_in_Low_and_High_GHMI.png", width=6, height=6, units="in")
+ggsave("Figures/Hymenoptera_Observations_in_Low_and_High_GHMI.png", width=5.28, height=5.28, units="in")
 
 
 
@@ -450,7 +450,7 @@ ggplot(coleoptera_data, aes(x = day_of_year, fill = GHMI_range)) +
         legend.text = element_text(family = "Times New Roman")
   )
 
-ggsave("Figures/Coleoptera_Observations_in_Low_and_High_GHMI.png", width=6, height=6, units="in")
+ggsave("Figures/Coleoptera_Observations_in_Low_and_High_GHMI.png", width=5.28, height=5.28, units="in")
 
 
 
@@ -493,7 +493,7 @@ ggplot(diptera_data, aes(x = day_of_year, fill = GHMI_range)) +
         legend.text = element_text(family = "Times New Roman")
   )
 
-ggsave("Figures/Diptera_Observations_in_Low_and_High_GHMI.png", width=6, height=6, units="in")
+ggsave("Figures/Diptera_Observations_in_Low_and_High_GHMI.png", width=5.28, height=5.28, units="in")
 
 
 

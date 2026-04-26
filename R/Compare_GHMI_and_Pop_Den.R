@@ -307,7 +307,7 @@ ggplot(species_gam_all, aes(x = pop_den_estimate, y = species_id)) +
     strip.text = element_text(family = "Times New Roman", size = 35, face="bold"),
     panel.spacing = unit(1.5, "lines")               
   ) +
-  labs(x = "Slope vs GHMI", y = "Species Identification Number") 
+  labs(x = "Effect of Population Density on Phenology", y = "Species Identification Number") 
 
 # the really low slop for duration and offset is Hypoprepia fucosa
 ggsave("Figures/combined_plot_phenology_slopes_of_all_species_pop_den.png",

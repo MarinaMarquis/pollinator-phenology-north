@@ -15,10 +15,10 @@ library(broom)
 library(purrr)
 library(extrafont)
 
-phenology_estimates_all_species_each_grid_with_landsat <- readRDS("Data/final_phenology_df_for_analysis.RDS")
+phenology_estimates_all_species_each_grid_with_landsat <- readRDS("Data/final_phenology_df_for_analysis.RDS") #phenology data used in GAMs with climate, lat/long, and GHMI
 grids_5 <- st_read("Data/Spatial Data/gridded map of NA24 region/NA24_gridded_map.geojson") #gridded map
 NA_24 <- st_read("Data/Spatial Data/ecoregion geojson/NA_24_clipped.geojson") #map of bioregion NA24 (no grids)
-species_gam <- read.csv("Data/GAM_results/gam_results_by_species_w_climate.csv") #individual species GAM results, select model outputs 
+species_gam <- read.csv("Data/GAM_results/gam_results_by_species_w_climate.csv") #individual species GAM results, select model outputs (p values, estimates, etc)
 species_gam_full <- readRDS("Data/GAM_results/species_gam_full_w_climate.rds") # full GAM results (not just select model outputs)
 
 
@@ -824,7 +824,7 @@ ggsave("Figures/slope_of_species_duration_plot_20_random_species.png", width=6, 
 #        example species  
 
 
-# Randomly sample 20 species
+# Randomly sample 10 species
 set.seed(123)  
 ten_random_species <- sample(unique(duration_gam$species), 10)
 duration_gam_random_ten <- duration_gam %>%
@@ -989,7 +989,8 @@ p_duration <- ggplot(species_gam_duration, aes(x = GHMI_estimate, y = species_id
     title = "Total Duration of Activity Period Across a Range of GHMI Values for All Species"
   ) +
   xlim(-200, 250) +
-  theme(axis.text.x = element_text(family = "Times New Roman", size = 12),
+  theme(plot.title = element_text(family = "Times New Roman", size = 14),
+        axis.text.x = element_text(family = "Times New Roman", size = 12),
         axis.text.y = element_text(family = "Times New Roman", size = 12),
         axis.title.x = element_text(family = "Times New Roman", size = 14),
         axis.title.y = element_text(family = "Times New Roman", size = 14), 
@@ -1028,7 +1029,8 @@ p_onset <- ggplot(species_gam_onset, aes(x = GHMI_estimate, y = species_id)) +
     title = "Onset of Activity Period Across a Range of GHM Values for All Species"
   ) +
   xlim(-200, 250) +
-  theme(axis.text.x = element_text(family = "Times New Roman", size = 12),
+  theme(plot.title = element_text(family = "Times New Roman", size = 14),
+        axis.text.x = element_text(family = "Times New Roman", size = 12),
         axis.text.y = element_text(family = "Times New Roman", size = 12),
         axis.title.x = element_text(family = "Times New Roman", size = 14),
         axis.title.y = element_text(family = "Times New Roman", size = 14), 
@@ -1072,7 +1074,8 @@ p_offset <- ggplot(species_gam_offset, aes(x = GHMI_estimate, y = species_id)) +
     title = "Offset of Activity Period Across a Range of GHM Values for All Species"
   ) +
   xlim(-200, 250) +
-  theme(axis.text.x = element_text(family = "Times New Roman", size = 12),
+  theme(plot.title = element_text(family = "Times New Roman", size = 14),
+        axis.text.x = element_text(family = "Times New Roman", size = 12),
         axis.text.y = element_text(family = "Times New Roman", size = 12),
         axis.title.x = element_text(family = "Times New Roman", size = 14),
         axis.title.y = element_text(family = "Times New Roman", size = 14), 
@@ -1121,16 +1124,14 @@ ggplot(species_gam_all, aes(x = GHMI_estimate, y = species_id)) +
     strip.text = element_text(family = "Times New Roman", size = 35, face="bold"),
     panel.spacing = unit(1.5, "lines")               
   ) +
-  labs(x = "Slope vs GHMI", y = "Species Identification Number")
+  labs(x = "Effect of Anthropogenic Modification on Phenology", y = "Species Identification Number")
 
 
-# Save it 
+# Save it as a full figure 
 ggsave("Figures/combined_plot_phenology_slopes_of_all_species_w_climate.png",
        width = 21, height = 11, units = "in", bg = "transparent")
 
-
-
-
+# Then save a second one in different dimensions for the combined supplemental figure 
 
 
 
@@ -1145,8 +1146,8 @@ ggsave("Figures/combined_plot_phenology_slopes_of_all_species_w_climate.png",
 selected_species <- c("Bombus impatiens",
                       "Xylocopa virginica",
                       "Apis mellifera", 
-                      "Battus philenor", 
-                      "Pyrrharctia isabella", 
+                      "Papilio troilus", 
+                      "Abaeis nicippe", 
                       "Chauliognathus marginatus"
 )
 
@@ -1265,7 +1266,7 @@ ggplot() +
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
     panel.spacing = unit(1, "lines"),
     strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
-    strip.text = element_text(family = "Times New Roman", face = "italic", size = 16),
+    strip.text = element_text(family = "Times New Roman", face = "italic", size = 12),
     axis.text = element_text(family = "Times New Roman", size = 16),
     axis.title = element_text(family = "Times New Roman", size=18)
   ) +
@@ -1276,7 +1277,7 @@ ggplot() +
 
 
 # Save it
-ggsave("Figures/duration_across_ghmi_for_6_species_w_climate.png", width = 8, height = 10, units = "in", bg = "transparent")
+ggsave("Figures/duration_across_ghmi_for_6_species_w_climate.png",  width = 6.2, height = 7.37, units = "in", bg = "transparent")
 
 
 
@@ -1292,16 +1293,22 @@ ggsave("Figures/duration_across_ghmi_for_6_species_w_climate.png", width = 8, he
 
 
 ######## Figure 31: Onset values across a range of GHMI values for 
-#        11 species 
+#        10 species 
 
 
 # Species lists by phenology estimate 
-species_onset <- c("Papilio glaucus", "Xylocopa virginica", "Danaus plexippus", "Apis mellifera",          
-                   "Hylephila phyleus", "Bombus griseocollis", "Papilio troilus", 
-                   "Bombus pensylvanicus", "Protographium marcellus", 
-                   "Tetraopes tetrophthalmus", "Strymon melinus")
+species_onset <- c("Papilio glaucus",
+                   "Xylocopa virginica",
+                   "Danaus plexippus",
+                   "Apis mellifera",
+                   "Battus philenor",
+                   "Hylephila phyleus", 
+                   "Bombus griseocollis",
+                   "Papilio troilus",
+                   "Bombus pensylvanicus", 
+                   "Chauliognathus marginatus")
 
-eleven_species <- phenology_estimates_all_species_each_grid_with_landsat %>%
+ten_species <- phenology_estimates_all_species_each_grid_with_landsat %>%
   filter(species %in% species_onset)
 
 
@@ -1313,24 +1320,28 @@ prediction_df <- map_dfr(species_onset, function(sp) {
   
   # observed GHMI range
   ghmi_seq <- seq(
-    min(eleven_species$mean_GHMI[eleven_species$species == sp], na.rm = TRUE),
-    max(eleven_species$mean_GHMI[eleven_species$species == sp], na.rm = TRUE),
+    min(ten_species$mean_GHMI[ten_species$species == sp], na.rm = TRUE),
+    max(ten_species$mean_GHMI[ten_species$species == sp], na.rm = TRUE),
     length.out = 200
   )
   
-  # average lat/lon for this species
-  sp_avg <- eleven_species %>%
+  # average lat/lon for this species and average temp/precip
+  sp_avg <- ten_species %>%
     filter(species == sp) %>%
     summarise(
       lat = mean(lat, na.rm = TRUE),
-      lon = mean(lon, na.rm = TRUE)
+      lon = mean(lon, na.rm = TRUE),
+      prcp = mean(prcp, na.rm = TRUE),
+      temp = mean(temp, na.rm = TRUE)
     )
   
   # newdata for prediction
   newdata <- data.frame(
     mean_GHMI = ghmi_seq,
     lat = sp_avg$lat,
-    lon = sp_avg$lon
+    lon = sp_avg$lon,
+    temp = sp_avg$temp,
+    prcp = sp_avg$prcp
   )
   
   # predict with SE
@@ -1346,6 +1357,7 @@ prediction_df <- map_dfr(species_onset, function(sp) {
     )
 })
 
+
 # This uses the GAMs (stored in species_gam_full) to predict the onset values we'd expect at each
 #GHMI point. This is so we can create a slope (red line) based on our GAMs. The confidence intervals
 #were calculated using the SE of predicted values from the GAMs output. 
@@ -1355,7 +1367,7 @@ prediction_df <- map_dfr(species_onset, function(sp) {
 # Plot it 
 ggplot() +
   geom_point(
-    data = eleven_species,
+    data = ten_species,
     aes(x = mean_GHMI, y = onset),
     alpha = 0.5
   ) +
@@ -1377,7 +1389,7 @@ ggplot() +
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
     panel.spacing = unit(1, "lines"),
     strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
-    strip.text = element_text(family = "Times New Roman", face = "italic", size = 14),
+    strip.text = element_text(family = "Times New Roman", face = "italic", size = 9),
     axis.text = element_text(family = "Times New Roman", size = 14),
     axis.title = element_text(family = "Times New Roman", size=16)
   )  +
@@ -1387,7 +1399,7 @@ ggplot() +
   )
 
 # Save it
-ggsave("Figures/onset_across_ghmi_for_11_species.png", width = 8, height = 10, units = "in", bg = "transparent")
+ggsave("Figures/onset_across_ghmi_for_10_species_w_climate.png", width = 6.2, height = 7.37, units = "in", bg = "transparent")
 
 
 
@@ -1397,16 +1409,24 @@ ggsave("Figures/onset_across_ghmi_for_11_species.png", width = 8, height = 10, u
 
 
 ######## Figure 32: Offset values across a range of GHMI values for 
-#        14 species 
+#        12 species 
 
 
 
-species_offset <- c("Papilio glaucus", "Bombus impatiens", "Danaus plexippus", "Epargyreus clarus",        
-                    "Battus philenor",  "Phyciodes tharos", "Hylephila phyleus", "Pieris rapae", 
-                    "Pyrrharctia isabella", "Bombus bimaculatus", "Scopula limboundata", 
-                    "Tetraopes tetrophthalmus", "Chauliognathus marginatus", "Marimatha nigrofimbria")
+species_offset <- c("Papilio glaucus",
+                    "Bombus impatiens",
+                    "Danaus plexippus",
+                    "Epargyreus clarus",
+                    "Battus philenor",
+                    "Phyciodes tharos",
+                    "Hylephila phyleus",
+                    "Pieris rapae",
+                    "Pyrrharctia isabella",
+                    "Scopula limboundata",
+                    "Pleuroprucha insulsaria",
+                    "Marimatha nigrofimbria")
 
-fourteen_species <- phenology_estimates_all_species_each_grid_with_landsat %>%
+twelve_species <- phenology_estimates_all_species_each_grid_with_landsat %>%
   filter(species %in% species_offset)
 
 
@@ -1418,24 +1438,28 @@ prediction_df <- map_dfr(species_offset, function(sp) {
   
   # observed GHMI range
   ghmi_seq <- seq(
-    min(fourteen_species$mean_GHMI[fourteen_species$species == sp], na.rm = TRUE),
-    max(fourteen_species$mean_GHMI[fourteen_species$species == sp], na.rm = TRUE),
+    min(twelve_species$mean_GHMI[twelve_species$species == sp], na.rm = TRUE),
+    max(twelve_species$mean_GHMI[twelve_species$species == sp], na.rm = TRUE),
     length.out = 200
   )
   
-  # average lat/lon for this species
-  sp_avg <- fourteen_species %>%
+  # average lat/lon for this species and average temp/precip
+  sp_avg <- twelve_species %>%
     filter(species == sp) %>%
     summarise(
       lat = mean(lat, na.rm = TRUE),
-      lon = mean(lon, na.rm = TRUE)
+      lon = mean(lon, na.rm = TRUE),
+      prcp = mean(prcp, na.rm = TRUE),
+      temp = mean(temp, na.rm = TRUE)
     )
   
   # newdata for prediction
   newdata <- data.frame(
     mean_GHMI = ghmi_seq,
     lat = sp_avg$lat,
-    lon = sp_avg$lon
+    lon = sp_avg$lon,
+    temp = sp_avg$temp,
+    prcp = sp_avg$prcp
   )
   
   # predict with SE
@@ -1460,7 +1484,7 @@ prediction_df <- map_dfr(species_offset, function(sp) {
 # Plot it 
 ggplot() +
   geom_point(
-    data = fourteen_species,
+    data = twelve_species,
     aes(x = mean_GHMI, y = offset),
     alpha = 0.5
   ) +
@@ -1476,7 +1500,7 @@ ggplot() +
     fill = "red",
     alpha = 0.15
   ) +
-  facet_wrap(~ species, ncol = 4, scales = "free") +
+  facet_wrap(~ species, ncol = 3, scales = "free") +
   theme_minimal() +
   theme(
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
@@ -1492,7 +1516,7 @@ ggplot() +
   )
 
 # Save it
-ggsave("Figures/offset_across_ghmi_for_14_species.png", width = 8, height = 10, units = "in", bg = "transparent")
+ggsave("Figures/offset_across_ghmi_for_12_species_w_climate.png", width = 6.2, height = 7.37, units = "in", bg = "transparent")
 
 
 
