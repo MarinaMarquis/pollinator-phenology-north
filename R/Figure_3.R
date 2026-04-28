@@ -9,6 +9,7 @@ library(viridis)
 library(RStoolbox)
 library(terra)
 library(prettymapr)
+library(ggspatial)
 
 # read in data 
 observations_with_landsat_variables <- readRDS("Data/observations_with_landsat_variables.rds") 
@@ -74,7 +75,7 @@ ggsave("Figures/map_of_species_per_grid_cell.png", width=6.27, height=6.27, unit
 library(maptiles)
 
 # create bounding box to use as an example
-bbox <- c(xmin = -84.97552, ymin = 33.02802, xmax = -83.95281, ymax = 34.60635)
+bbox <- c(xmin = -84.8, ymin = 33.02802, xmax = -83.5, ymax = 34.60635)
 
 #Look at species with most observations from the data frame that was created earlier in this script 
 obs
@@ -102,24 +103,15 @@ grid_with_obs_count_per_species <- grids_5 %>%
 Bombus_impatiens <- grid_with_obs_count_per_species %>%
   filter(species == "Bombus impatiens")
 
-bbox_orig <- st_bbox(Bombus_impatiens_cropped)
-bbox_sfc <- st_as_sfc(bbox_orig)
+# Get extent 
+bbox_sfc <- st_as_sfc(st_bbox(bbox, crs = st_crs(Bombus_impatiens)))
+Bombus_impatiens_cropped <- st_crop(Bombus_impatiens, bbox_sfc)
 
 sat_map <- get_tiles(bbox_sfc, zoom=10, provider = "Esri.WorldImagery", crop = TRUE)
-
-# Get extent as xmin, xmax, ymin, ymax
-r_ext <- ext(sat_map)  # returns a SpatExtent object
-r_ext
-
-bbox_sat <- c(r_ext$xmin,r_ext$ymin,r_ext$xmax,r_ext$ymax)
-
-
-Bombus_impatiens_cropped <- st_crop(Bombus_impatiens, bbox_sat)
 
 ggRGB(sat_map, r = 1, g = 2, b = 3) +
   geom_sf(data=Bombus_impatiens_cropped, aes(fill = log10(obs_n)), color = NA) +
   
-  geom_sf(data = NA_24, color = "black", fill = NA, linewidth = 0.8) +
   scale_fill_viridis_c(option = "plasma", na.value = NA) +
   labs(
     title = "Number of Bombus impatiens Observations per Grid Cell",
@@ -146,8 +138,9 @@ ggsave("Figures/Bombus_impatiens_observations_across_grids_sat.png", width = 2.0
 Papilio_glaucus <- grid_with_obs_count_per_species %>%
   filter(species == "Papilio glaucus")
 
-Papilio_glaucus_cropped <- st_crop(Papilio_glaucus, bbox_sat)
-
+# Get extent 
+bbox_sfc <- st_as_sfc(st_bbox(bbox, crs = st_crs(Papilio_glaucus)))
+Papilio_glaucus_cropped <- st_crop(Papilio_glaucus, bbox_sfc)
 
 ggRGB(sat_map, r = 1, g = 2, b = 3) +
   geom_sf(data= Papilio_glaucus_cropped, aes(fill = log10(obs_n)), color = NA) +
@@ -176,7 +169,9 @@ ggsave("Figures/Papilio_glaucus_observations_across_grids.png", width = 2.07, he
 Xylocopa_virginica <- grid_with_obs_count_per_species %>%
   filter(species == "Xylocopa virginica")
 
-Xylocopa_virginica_cropped <- st_crop(Xylocopa_virginica, bbox_sat)
+# Get extent 
+bbox_sfc <- st_as_sfc(st_bbox(bbox, crs = st_crs(Xylocopa_virginica)))
+Xylocopa_virginica_cropped <- st_crop(Xylocopa_virginica, bbox_sfc)
 
 ggRGB(sat_map, r = 1, g = 2, b = 3) +
   geom_sf(data= Xylocopa_virginica_cropped, aes(fill = log10(obs_n)), color = NA) +
@@ -200,15 +195,13 @@ ggRGB(sat_map, r = 1, g = 2, b = 3) +
   )
 ggsave("Figures/Xylocopa_virginica_observations_across_grids_sat.png", width = 2.07, height = 2.07, units = "in", bg = "transparent")
 
-
-
-
-
 #Apis mellifera
 Apis_mellifera <- grid_with_obs_count_per_species %>%
   filter(species == "Apis mellifera")
 
-Apis_mellifera_cropped <- st_crop(Apis_mellifera, bbox_sat)
+# Get extent 
+bbox_sfc <- st_as_sfc(st_bbox(bbox, crs = st_crs(Apis_mellifera)))
+Apis_mellifera_cropped <- st_crop(Apis_mellifera, bbox_sfc)
 
 ggRGB(sat_map, r = 1, g = 2, b = 3) +
   geom_sf(data= Apis_mellifera_cropped, aes(fill = log10(obs_n)), color = NA) +
