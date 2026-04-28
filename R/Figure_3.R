@@ -67,7 +67,7 @@ ggRGB(sat_map, r = 1, g = 2, b = 3) +
     axis.title = element_blank()
   )
 
-ggsave("Figures/map_of_species_per_grid_cell.png", width=10, height=10, units="in")
+ggsave("Figures/map_of_species_per_grid_cell.png", width=6.27, height=6.27, units="in")
 
 ############################################## Example Species 
 
@@ -138,7 +138,7 @@ ggRGB(sat_map, r = 1, g = 2, b = 3) +
     panel.grid = element_blank(),
     axis.title = element_blank()
   )
-ggsave("Figures/Bombus_impatiens_observations_across_grids_sat.png", width = 6, height = 6, units = "in", bg = "transparent")
+ggsave("Figures/Bombus_impatiens_observations_across_grids_sat.png", width = 2.07, height = 2.07, units = "in", bg = "transparent")
 
 
 
@@ -169,7 +169,7 @@ ggRGB(sat_map, r = 1, g = 2, b = 3) +
     panel.grid = element_blank(),
     axis.title = element_blank()
   )
-ggsave("Figures/Papilio_glaucus_observations_across_grids.png", width = 6, height = 6, units = "in", bg = "transparent")
+ggsave("Figures/Papilio_glaucus_observations_across_grids.png", width = 2.07, height = 2.07, units = "in", bg = "transparent")
 
 
 #Xylocopa virginica
@@ -198,7 +198,7 @@ ggRGB(sat_map, r = 1, g = 2, b = 3) +
     panel.grid = element_blank(),
     axis.title = element_blank()
   )
-ggsave("Figures/Xylocopa_virginica_observations_across_grids_sat.png", width = 6, height = 6, units = "in", bg = "transparent")
+ggsave("Figures/Xylocopa_virginica_observations_across_grids_sat.png", width = 2.07, height = 2.07, units = "in", bg = "transparent")
 
 
 
@@ -230,5 +230,5 @@ ggRGB(sat_map, r = 1, g = 2, b = 3) +
     panel.grid = element_blank(),
     axis.title = element_blank()
   )
-ggsave("Figures/Apis_mellifera_observations_across_grids_sat.png", width = 6, height = 6, units = "in", bg = "transparent")
+ggsave("Figures/Apis_mellifera_observations_across_grids_sat.png", width = 2.07, height = 2.07, units = "in", bg = "transparent")
 
