@@ -114,12 +114,12 @@ ggRGB(sat_map, r = 1, g = 2, b = 3) +
   
   scale_fill_viridis_c(option = "plasma", na.value = NA) +
   labs(
-    title = "Number of Bombus impatiens Observations per Grid Cell",
+    title = "Number of Bombus impatiens\nObservations per Grid Cell",
     fill = "log10(Count)",
     x = NULL,
     y = NULL
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
     panel.background = element_rect(fill = "transparent", color = NA),
     plot.background = element_rect(fill = "transparent", color = NA),
@@ -146,12 +146,12 @@ ggRGB(sat_map, r = 1, g = 2, b = 3) +
   geom_sf(data= Papilio_glaucus_cropped, aes(fill = log10(obs_n)), color = NA) +
   scale_fill_viridis_c(option = "plasma", na.value = NA) +
   labs(
-    title = "Number of Papilio glaucus, Observations per Grid Cell",
+    title = "Number of Papilio glaucus\nObservations per Grid Cell",
     fill = "log10(Count)",
     x = NULL,
     y = NULL
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
     panel.background = element_rect(fill = "transparent", color = NA),
     plot.background = element_rect(fill = "transparent", color = NA),
@@ -177,12 +177,12 @@ ggRGB(sat_map, r = 1, g = 2, b = 3) +
   geom_sf(data= Xylocopa_virginica_cropped, aes(fill = log10(obs_n)), color = NA) +
   scale_fill_viridis_c(option = "plasma", na.value = NA) +
   labs(
-    title = "Number of Xylocopa virginica Observations per Grid Cell",
+    title = "Number of Xylocopa virginica\nObservations per Grid Cell",
     fill = "log10(Count)",
     x = NULL,
     y = NULL
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
     panel.background = element_rect(fill = "transparent", color = NA),
     plot.background = element_rect(fill = "transparent", color = NA),
@@ -207,12 +207,12 @@ ggRGB(sat_map, r = 1, g = 2, b = 3) +
   geom_sf(data= Apis_mellifera_cropped, aes(fill = log10(obs_n)), color = NA) +
   scale_fill_viridis_c(option = "plasma", na.value = NA) +
   labs(
-    title = "Number of Apis mellifera Observations per Grid Cell",
+    title = "Number of Apis mellifera\nObservations per Grid Cell",
     fill = "log10(Count)",
     x = NULL,
     y = NULL
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 8) +
   theme(
     panel.background = element_rect(fill = "transparent", color = NA),
     plot.background = element_rect(fill = "transparent", color = NA),
