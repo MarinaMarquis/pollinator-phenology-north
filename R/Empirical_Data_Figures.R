@@ -6,8 +6,10 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(lubridate)
-library(sf)
 library(extrafont)
+library(sf)
+library(ggspatial)
+library(maptiles)
 
 
 #Read in data: 
@@ -975,3 +977,45 @@ ggplot(grids_with_temp_and_precip) +
 
 
 
+
+
+
+
+########################################################################################################################
+### Figure 28: map of United States with Bioregion NA24 for spatial context 
+
+# Bounding box of the United States
+us_bbox <- st_as_sfc(st_bbox(c(
+  xmin = -125, xmax = -66,
+  ymin = 24, ymax = 50
+), crs = 4326))
+
+
+# Download satellite imagery
+sat_map <- get_tiles(us_bbox,
+                     provider = "Esri.WorldImagery",
+                     zoom = 5,
+                     crop = TRUE)
+
+
+# Make sure the CRS of satellite imagery matches NA24
+NA_24 <- st_transform(NA_24, st_crs(sat_map))
+
+# Plot it 
+ggplot() +
+  layer_spatial(sat_map) +
+  geom_sf(data = NA_24,
+          fill = "lightgreen",
+          color = "lightgreen",
+          linewidth = 1.2) +
+  theme_void()
+
+# Save it 
+ggsave(
+  "Figures/map_of_US_and_BioregionNA24.png",
+  width = 6.35,  
+  height = 10.59,  
+  dpi = 600
+)
+
+########################################################################################################################
