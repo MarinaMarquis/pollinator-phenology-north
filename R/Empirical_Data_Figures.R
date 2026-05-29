@@ -10,6 +10,7 @@ library(extrafont)
 library(sf)
 library(ggspatial)
 library(maptiles)
+library(terra)
 
 
 #Read in data: 
@@ -1016,6 +1017,75 @@ ggsave(
   width = 6.35,  
   height = 10.59,  
   dpi = 600
+)
+
+########################################################################################################################
+
+
+
+
+
+
+
+
+
+########################################################################################################################
+### Figure 29: Satellite map of Bioregion NA24
+
+
+# Set CRS
+NA_24 <- st_transform(NA_24, 4326)
+
+# Add buffer 
+NA_24_buf <- st_buffer(NA_24, dist = 0.01)
+
+# Download satellite imagery
+sat_map <- get_tiles(
+  NA_24_buf,
+  provider = "Esri.WorldImagery",
+  zoom = 7,
+  crop = TRUE
+)
+
+# Convert to terra + mask 
+sat_masked <- terra::mask(
+  sat_map,
+  terra::vect(NA_24_buf)
+)
+
+# Convert to data frame 
+sat_df <- as.data.frame(sat_masked, xy = TRUE, na.rm = TRUE)
+names(sat_df)[3:5] <- c("R", "G", "B")
+
+# Plot it
+p <- ggplot() +
+  
+  geom_raster(
+    data = sat_df,
+    aes(x = x, y = y, fill = rgb(R, G, B, maxColorValue = 255))
+  ) +
+  scale_fill_identity() +
+  
+  # NA24 outline (optional but useful for checking)
+  geom_sf(
+    data = st_transform(NA_24, st_crs(sat_masked)),
+    fill = NA,
+    color = NA
+  ) +
+  
+  coord_sf(expand = FALSE) +
+  theme_void()
+
+p
+
+# Save it 
+ggsave(
+  "Figures/NA24_satellite_cutout.png",
+  plot = p,
+  width = 7,
+  height = 7,
+  dpi = 900,
+  bg = "white"
 )
 
 ########################################################################################################################

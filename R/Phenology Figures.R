@@ -1153,6 +1153,26 @@ ggsave("Figures/combined_plot_phenology_slopes_of_all_species_w_climate_solid_ba
        width = 6.5, height = 3.41, units = "in", bg = "white")
 
 
+# Then save a third one with PowerPoint dimensions 
+ggplot(species_gam_all, aes(x = GHMI_estimate, y = species_id)) +
+  geom_point(size=2.3) +
+  geom_errorbarh(aes(xmin = GHMI_estimate - GHMI_se,
+                     xmax = GHMI_estimate + GHMI_se), height = 0.1, linewidth=0.3) +
+  geom_vline(xintercept = 0, color = "red", size = 0.7) +
+  facet_wrap(~ variable, nrow = 1) +  
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),                     
+    panel.border = element_rect(color = "black", fill = NA, size = 0.6),
+    axis.text = element_text(family = "Times New Roman", size = 24),
+    axis.title = element_text(family = "Times New Roman", size = 28),
+    strip.text = element_text(family = "Times New Roman", size = 34, face="bold"),
+    panel.spacing = unit(1.5, "lines")               
+  ) +
+  labs(x = "Effect of Anthropogenic Modification on Phenology", y = "Species Identification Number")
+
+ggsave("Figures/combined_plot_phenology_slopes_of_all_species_with_climate_PowerPoint_dimensions.png",
+       width = 19.26, height = 10.1,  units = "in", bg = "transparent")
 
 
 
@@ -1250,41 +1270,6 @@ ggplot() +
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
     panel.spacing = unit(1, "lines"),
     strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
-    strip.text = element_text(family = "Times New Roman", face = "italic", size = 9),
-    axis.text = element_text(family = "Times New Roman", size = 9),
-    axis.title = element_text(family = "Times New Roman"),
-    plot.title = element_text(family = "Times New Roman", size = 11, face = "bold"),
-  ) +
-  labs(
-    title = "Observed Duration Across GHMI and GAM-Predicted Relationship",
-    x = "Global Human Modification Index (GHMI)",
-    y = "Duration (days)"
-  )
-
-ggplot() +
-  geom_point(
-    data = six_species,
-    aes(x = mean_GHMI, y = duration),
-    alpha = 0.5
-  ) +
-  geom_line(
-    data = prediction_df,
-    aes(x = mean_GHMI, y = fit),
-    color = "red",
-    linewidth = 1
-  ) +
-  geom_ribbon(
-    data = prediction_df,
-    aes(x = mean_GHMI, ymin = lower, ymax = upper),
-    fill = "red",
-    alpha = 0.15
-  ) +
-  facet_wrap(~ species, ncol = 2, scales = "free") +
-  theme_minimal() +
-  theme(
-    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
-    panel.spacing = unit(1, "lines"),
-    strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
     strip.text = element_text(family = "Times New Roman", face = "italic", size = 12),
     axis.text = element_text(family = "Times New Roman", size = 16),
     axis.title = element_text(family = "Times New Roman", size=18)
@@ -1332,11 +1317,44 @@ ggplot() +
     y = "Duration (days)"
   )
 
-
-# Save it
 ggsave("Figures/duration_across_ghmi_for_6_species_w_climate_solid_white_background.png",  width = 6.2, height = 7.37, units = "in", bg = "white")
 
 
+# Now save it with PowerPoint dimensions
+ggplot() +
+  geom_point(
+    data = six_species,
+    aes(x = mean_GHMI, y = duration),
+    alpha = 0.5
+  ) +
+  geom_line(
+    data = prediction_df,
+    aes(x = mean_GHMI, y = fit),
+    color = "red",
+    linewidth = 1
+  ) +
+  geom_ribbon(
+    data = prediction_df,
+    aes(x = mean_GHMI, ymin = lower, ymax = upper),
+    fill = "red",
+    alpha = 0.15
+  ) +
+  facet_wrap(~ species, ncol = 2, scales = "free") +
+  theme_minimal() +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+    panel.spacing = unit(1, "lines"),
+    strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
+    strip.text = element_text(family = "Times New Roman", face = "italic", size = 24),
+    axis.text = element_text(family = "Times New Roman", size = 16),
+    axis.title = element_text(family = "Times New Roman", size=26)
+  ) +
+  labs(
+    x = "Global Human Modification Index (GHMI)",
+    y = "Duration (days)"
+  )
+ggsave("Figures/duration_across_ghmi_for_6_species_w_climate_PowerPoint_dimensions.png",  
+       width = 9.33, height = 11.1, units = "in", bg = "transparent")
 
 
 
@@ -1496,6 +1514,49 @@ ggplot() +
 ggsave("Figures/onset_across_ghmi_for_10_species_w_climate_solid_white_background.png", width = 6.2, height = 7.37, units = "in", bg = "white")
 
 
+# Now save it with PowerPoint dimensions
+ggplot() +
+  geom_point(
+    data = ten_species,
+    aes(x = mean_GHMI, y = onset),
+    alpha = 0.5
+  ) +
+  geom_line(
+    data = prediction_df,
+    aes(x = mean_GHMI, y = fit),
+    color = "red",
+    linewidth = 1
+  ) +
+  geom_ribbon(
+    data = prediction_df,
+    aes(x = mean_GHMI, ymin = lower, ymax = upper),
+    fill = "red",
+    alpha = 0.15
+  ) +
+  facet_wrap(~ species, ncol = 3, scales = "free") +
+  theme_minimal() +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+    panel.spacing = unit(1, "lines"),
+    strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
+    strip.text = element_text(family = "Times New Roman", face = "italic", size = 16),
+    axis.text = element_text(family = "Times New Roman", size = 16),
+    axis.title = element_text(family = "Times New Roman", size=26)
+  ) +
+  labs(
+    x = "Global Human Modification Index (GHMI)",
+    y = "Onset (days)"
+  )
+
+ggsave("Figures/onset_across_ghmi_for_10_species_w_climate_PowerPoint_dimensions.png", 
+       width = 9.46, height = 11.25, units = "in", bg = "transparent")
+
+
+
+
+
+
+
 
 
 
@@ -1650,5 +1711,42 @@ ggplot() +
 ggsave("Figures/offset_across_ghmi_for_12_species_w_climate_solid_white_background.png", width = 6.2, height = 7.37, units = "in", bg = "white")
 
 
+# Now save it with PowerPoint dimensions
+ggplot() +
+  geom_point(
+    data = twelve_species,
+    aes(x = mean_GHMI, y = offset),
+    alpha = 0.5
+  ) +
+  geom_line(
+    data = prediction_df,
+    aes(x = mean_GHMI, y = fit),
+    color = "red",
+    linewidth = 1
+  ) +
+  geom_ribbon(
+    data = prediction_df,
+    aes(x = mean_GHMI, ymin = lower, ymax = upper),
+    fill = "red",
+    alpha = 0.15
+  ) +
+  facet_wrap(~ species, ncol = 3, scales = "free") +
+  theme_minimal() +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+    panel.spacing = unit(1, "lines"),
+    strip.background = element_rect(fill = "gray90", color = "black", linewidth = 0.5),
+    strip.text = element_text(family = "Times New Roman", face = "italic", size = 16),
+    axis.text = element_text(family = "Times New Roman", size = 16),
+    axis.title = element_text(family = "Times New Roman", size=26)
+  ) +
+  labs(
+    x = "Global Human Modification Index (GHMI)",
+    y = "Offset (days)"
+  )
+
+# Save it
+ggsave("Figures/offset_across_ghmi_for_12_species_w_climate_PowePoint_dimensions.png", 
+       width = 9.5, height = 11.29, units = "in", bg = "transparent")
 
 
